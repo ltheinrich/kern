@@ -2,6 +2,7 @@ use crate::Error;
 use std::io;
 use std::io::prelude::{Read, Write};
 use std::net::TcpStream;
+use std::time::Duration;
 
 /// Stream provides additional self processing functions
 pub trait Stream {
@@ -13,6 +14,7 @@ pub trait Stream {
 
     // additional
     fn read_full(&mut self, buf_size: usize) -> Result<Vec<u8>, Error>;
+    fn read_full_timeout(&mut self, buf_size: usize, timeout: Duration) -> Result<Vec<u8>, Error>;
     fn read_byte(&mut self) -> Result<u8, Error>;
     fn read_bool(&mut self) -> Result<bool, Error>;
     fn write_byte(&mut self, byte: u8) -> Result<(), Error>;
@@ -59,6 +61,44 @@ impl Stream for TcpStream {
                     buf.truncate(len);
                     data.append(&mut buf);
                     break;
+                }
+                _ => data.append(&mut buf),
+            }
+        }
+
+        // return full data
+        Ok(data)
+    }
+
+    /// Read until no more data is provided or a timeout
+    fn read_full_timeout(&mut self, buf_size: usize, timeout: Duration) -> Result<Vec<u8>, Error> {
+        // set timeout
+        match self.set_read_timeout(Some(timeout)) {
+            Ok(_) => {}
+            Err(err) => return Error::from(err),
+        }
+
+        // initialize vector and loop
+        let mut data = Vec::new();
+        let mut failed = false;
+        loop {
+            // create buffer and read
+            let mut buf = vec![0u8; buf_size];
+            let length = match self.read(&mut buf) {
+                Ok(length) => length,
+                Err(err) => return Error::from(err),
+            };
+
+            // check for split and break
+            match length {
+                len if len < buf_size => {
+                    buf.truncate(len);
+                    data.append(&mut buf);
+                    if failed && len == 0 {
+                        break;
+                    } else {
+                        failed = true;
+                    }
                 }
                 _ => data.append(&mut buf),
             }

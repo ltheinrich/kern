@@ -3,6 +3,30 @@ extern crate kern;
 use kern::net::Stream;
 use std::net::{TcpListener, TcpStream};
 use std::thread;
+use std::time::Duration;
+
+#[test]
+fn read_full_timeout() {
+    // create server and client
+    let server = TcpListener::bind("127.0.0.1:0").unwrap();
+    let mut client = TcpStream::connect(server.local_addr().unwrap()).unwrap();
+
+    // start server listener and read
+    let responder = thread::spawn(move || {
+        let (mut stream, _) = server.accept().unwrap();
+        stream.w("Hallo, das ist ein Test".as_bytes()).unwrap();
+    });
+    let result = client
+        .read_full_timeout(8192, Duration::from_secs(3))
+        .unwrap();
+
+    // check
+    assert_eq!(
+        "Hallo, das ist ein Test",
+        String::from_utf8(result).unwrap()
+    );
+    responder.join().unwrap();
+}
 
 #[test]
 fn read_full() {
