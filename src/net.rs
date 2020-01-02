@@ -14,7 +14,7 @@ pub trait Stream {
 
     // additional
     fn read_full(&mut self, buf_size: usize) -> Result<Vec<u8>, Error>;
-    fn read_full_timeout(&mut self, buf_size: usize, timeout: Duration) -> Result<Vec<u8>, Error>;
+    fn read_full_timeout(&mut self, buf_size: usize, timeout: u64) -> Result<Vec<u8>, Error>;
     fn read_byte(&mut self) -> Result<u8, Error>;
     fn read_bool(&mut self) -> Result<bool, Error>;
     fn write_byte(&mut self, byte: u8) -> Result<(), Error>;
@@ -70,10 +70,10 @@ impl Stream for TcpStream {
         Ok(data)
     }
 
-    /// Read until no more data is provided or a timeout
-    fn read_full_timeout(&mut self, buf_size: usize, timeout: Duration) -> Result<Vec<u8>, Error> {
+    /// Read until no more data is provided or a timeout (in milliseconds)
+    fn read_full_timeout(&mut self, buf_size: usize, timeout: u64) -> Result<Vec<u8>, Error> {
         // set timeout
-        match self.set_read_timeout(Some(timeout)) {
+        match self.set_read_timeout(Some(Duration::from_millis(timeout))) {
             Ok(_) => {}
             Err(err) => return Error::from(err),
         }

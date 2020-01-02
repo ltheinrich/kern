@@ -16,9 +16,7 @@ fn read_full_timeout() {
         let (mut stream, _) = server.accept().unwrap();
         stream.w("Hallo, das ist ein Test".as_bytes()).unwrap();
     });
-    let result = client
-        .read_full_timeout(8192, Duration::from_secs(3))
-        .unwrap();
+    let result = client.read_full_timeout(8192, 3000).unwrap();
 
     // check
     assert_eq!(
