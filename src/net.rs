@@ -11,6 +11,7 @@ pub trait Stream {
     fn re(&mut self, buf: &mut [u8]) -> io::Result<()>;
     fn w(&mut self, buf: &[u8]) -> io::Result<usize>;
     fn wa(&mut self, buf: &[u8]) -> io::Result<()>;
+    fn f(&mut self) -> io::Result<()>;
 
     // additional
     fn read_full(&mut self, buf_size: usize) -> Result<Vec<u8>, Error>;
@@ -41,6 +42,11 @@ impl Stream for TcpStream {
     // Wrapper for write_all
     fn wa(&mut self, buf: &[u8]) -> io::Result<()> {
         self.write_all(buf)
+    }
+
+    // Wrapper for flush
+    fn f(&mut self) -> io::Result<()> {
+        self.flush()
     }
 
     /// Read until no more data is provided
