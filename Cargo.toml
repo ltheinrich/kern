@@ -7,5 +7,3 @@ license = "ISC"
 repository = "https://github.com/ltheinrich/kern"
 description = "General library for Rust"
 readme = "README.md"
-
-[dependencies]
