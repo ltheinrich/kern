@@ -5,8 +5,6 @@ use std::str::FromStr;
 ///
 /// # Example
 /// ```
-/// extern crate kern;
-///
 /// use kern::Command;
 /// use std::env;
 ///

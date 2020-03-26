@@ -1,5 +1,3 @@
-extern crate kern;
-
 use kern::Config;
 
 #[test]

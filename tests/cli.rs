@@ -1,5 +1,3 @@
-extern crate kern;
-
 use kern::Command;
 
 // Test for Command

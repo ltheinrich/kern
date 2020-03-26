@@ -1,5 +1,3 @@
-extern crate kern;
-
 use kern::init_version;
 use kern::Fail;
 

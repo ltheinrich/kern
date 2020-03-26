@@ -3,7 +3,6 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 
 /// Fail structure
 /// ```
-/// extern crate kern;
 /// use kern::Fail;
 ///
 /// fn do_something() -> Result<(), Fail> {
