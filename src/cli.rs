@@ -1,4 +1,5 @@
 use std::collections::BTreeMap;
+use std::str::FromStr;
 
 /// Command represents an command parsed from the command-line
 ///
@@ -6,7 +7,7 @@ use std::collections::BTreeMap;
 /// ```
 /// extern crate kern;
 ///
-/// use kern::cli::Command;
+/// use kern::Command;
 /// use std::env;
 ///
 /// let args: Vec<String> = env::args().collect();
@@ -23,66 +24,79 @@ pub struct Command<'a> {
     /// List of options
     options: Vec<&'a str>,
 
-    /// List of String arguments
+    /// List of arguments
     arguments: Vec<&'a str>,
 }
 
 // Command implementation
 impl<'a> Command<'a> {
     /// Get command name
-    pub fn get_command(&self) -> &'a str {
+    pub fn command(&self) -> &'a str {
         // return comand name
         self.command
     }
 
     /// Get all parameters
-    pub fn get_parameters(&self) -> &BTreeMap<&'a str, &'a str> {
+    pub fn parameters(&self) -> &BTreeMap<&'a str, &'a str> {
         // return map of parameters
         &self.parameters
     }
 
-    /// Get specific parameter
-    pub fn get_parameter(&self, name: &'a str) -> Option<&&'a str> {
-        // return specific parameter
-        self.parameters.get(name)
+    /// Get all arguments
+    pub fn arguments(&self) -> &Vec<&'a str> {
+        // return arguments list
+        &self.arguments
+    }
+
+    /// Get specific parameter or default
+    pub fn parameter<T: FromStr>(&self, name: &str, default: T) -> T {
+        // return specific parameter or default
+        match self.parameters.get(name) {
+            Some(parameter) => parameter.parse().unwrap_or(default),
+            None => default,
+        }
+    }
+
+    /// Get specific parameter or default as &str
+    pub fn param(&self, name: &str, default: &'a str) -> &str {
+        // return specific parameter or default as &str
+        match self.parameters.get(name) {
+            Some(parameter) => parameter,
+            None => default,
+        }
     }
 
     /// Get all options
-    pub fn get_options(&self) -> &Vec<&'a str> {
+    pub fn options(&self) -> &Vec<&str> {
         // return options list
         &self.options
     }
 
     /// Check if option provided
-    pub fn is_option(&self, name: &'a str) -> bool {
+    pub fn option(&self, name: &str) -> bool {
         // return whether the option is provided
         self.options.contains(&name)
     }
 
-    /// Get all arguments
-    pub fn get_arguments(&self) -> &Vec<&'a str> {
-        // return arguments list
-        &self.arguments
+    /// Get argument at specific index or default
+    pub fn argument<T: FromStr>(&self, index: usize, default: T) -> T {
+        // return argument at specific index or default
+        match self.arguments.get(index) {
+            Some(argument) => argument.parse().unwrap_or(default),
+            None => default,
+        }
     }
 
-    /// Get argument at specific index
-    pub fn get_argument(&self, index: usize) -> Option<&&'a str> {
-        // return argument at specific index
-        self.arguments.get(index)
+    /// Get argument at specific index or default as &str
+    pub fn arg(&self, index: usize, default: &'a str) -> &str {
+        // return argument at specific index as &str
+        match self.arguments.get(index) {
+            Some(argument) => argument,
+            None => default,
+        }
     }
 
     /// Create a new Command from raw command line arguments without options
-    /// Provide the arguments list as &[&str]
-    ///
-    /// ```
-    /// extern crate kern;
-    ///
-    /// use kern::cli::Command;
-    /// use std::env;
-    ///
-    /// let args: Vec<String> = env::args().collect();
-    /// let command = Command::without_options(&args);
-    /// ```
     pub fn without_options(raw: &'a [String]) -> Self {
         // return Command
         Self::from(raw, &[])
@@ -90,16 +104,6 @@ impl<'a> Command<'a> {
 
     /// Create a new Command from raw command line arguments
     /// Provide the arguments list as &[&str]
-    ///
-    /// ```
-    /// extern crate kern;
-    ///
-    /// use kern::cli::Command;
-    /// use std::env;
-    ///
-    /// let args: Vec<String> = env::args().collect();
-    /// let command = Command::from(&args, &["option"]);
-    /// ```
     pub fn from(raw: &'a [String], filter_options: &[&str]) -> Self {
         // define command name
         let command = match raw.get(0) {

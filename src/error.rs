@@ -1,47 +1,52 @@
-use std::error;
-use std::fmt;
+use std::error::Error;
+use std::fmt::{Display, Formatter, Result as FmtResult};
 
-/// Error structure
+/// Fail structure
 /// ```
 /// extern crate kern;
-/// use kern::Error;
+/// use kern::Fail;
 ///
-/// fn do_something() -> Result<(), Error> {
-///     let err = Error::new("This is an error");
-///     Error::from(err)
+/// fn do_something() -> Result<(), Fail> {
+///     let err = Fail::new("This is an error");
+///     Fail::from(err)
 /// }
 ///
 /// println!("{}", do_something().unwrap_err());
 /// ```
 #[derive(Clone, Debug)]
-pub struct Error(String);
+pub struct Fail(String);
 
-// Error implementation
-impl Error {
-    /// Create Error from any Display
+// Fail implementation
+impl Fail {
+    /// Create Fail from any Display
     pub fn new<E>(err: E) -> Self
     where
-        E: fmt::Display,
+        E: Display,
     {
-        Error(err.to_string())
+        Fail(err.to_string())
     }
 
-    /// Create Result with Error from any Display
+    /// Create Result with Fail from any Display
     pub fn from<T, E>(err: E) -> Result<T, Self>
     where
-        E: fmt::Display,
+        E: Display,
     {
         Err(Self::new(err))
     }
+
+    /// Get error message
+    pub fn err_msg(&self) -> &str {
+        &self.0
+    }
 }
 
-/// std::error::Error implementation for Error
-impl error::Error for Error {}
+/// std::error::Error implementation for Fail
+impl Error for Fail {}
 
-/// Display implementation for Error
-impl fmt::Display for Error {
+/// Display implementation for Fail
+impl Display for Fail {
     // fmt implementation
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, formatter: &mut Formatter) -> FmtResult {
         write!(formatter, "{}", self.0)
     }
 }

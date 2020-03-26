@@ -1,62 +1,38 @@
 extern crate kern;
 
-use kern::conf::Config;
+use kern::Config;
 
 #[test]
-fn get() {
-    let config = Config::from("Hallo=Du\nDas=Ist ein kleiner Test\n\n");
-    assert_eq!("Du", config.get("Hallo").unwrap());
-    assert_eq!("Ist ein kleiner Test", config.get("Das").unwrap());
-    assert_ne!("Diesmal falsch", config.get("Hallo").unwrap());
-}
+fn config() {
+    // generate config
+    let config = Config::from("Hallo=Du\nDas=Ist ein kleiner Test\nint=604\nbool=true\n\n");
 
-#[test]
-fn exists() {
-    let config = Config::from("Hallo=Du\nDas=Ist ein kleiner Test\n\n");
-    assert_eq!(true, config.exists("Hallo"));
-    assert_eq!(true, config.exists("Das"));
-    assert_eq!(false, config.exists("Hall"));
-    assert_eq!(false, config.exists(""));
-}
+    // check value
+    assert_eq!(config.value("Hallo", "falsch"), "Du");
+    assert_eq!(config.value("Das", "falsch"), "Ist ein kleiner Test");
+    assert_ne!(config.value("Hallo", "falsch"), "Diesmal falsch");
 
-#[test]
-fn equals() {
-    let config = Config::from("Hallo=Du\nDas=Ist ein kleiner Test\n\n");
-    assert_eq!(true, config.equals("Hallo", "Du"));
-    assert_eq!(false, config.equals("Hallo", "Falscher Eintrag"));
-    assert_eq!(false, config.equals("Hall", "Gibt es nicht"));
-    assert_eq!(true, config.equals("Das", "Ist ein kleiner Test"));
-}
+    // check get
+    assert_eq!(config.get("int", 0), 604);
+    assert_eq!(config.get("bool", false), true);
 
-#[test]
-fn fill() {
-    let config = Config::read("Cargo.toml")
-        .unwrap()
-        .fill("Hallo=Du\nDas=Ist ein kleiner Test\nname=Lennart\n\n");
-    assert_eq!("\"kern\"", config.get("name").unwrap());
-    assert_eq!(
-        "[\"Lennart Heinrich <lennart@ltheinrich.de>\"]",
-        config.get("authors").unwrap()
-    );
-    assert_eq!("Du", config.get("Hallo").unwrap());
-    assert_eq!("Ist ein kleiner Test", config.get("Das").unwrap());
-    assert_eq!(false, config.exists(""));
+    // check exists
+    assert_eq!(config.exists("Hallo"), true);
+    assert_eq!(config.exists("Das"), true);
+    assert_eq!(config.exists("Hall"), false);
+    assert_eq!(config.exists(""), false);
 }
 
 #[test]
 fn read() {
-    let config = Config::read("Cargo.toml").unwrap();
-    assert_eq!("\"kern\"", config.get("name").unwrap());
+    // read Cargo.toml as config
+    let mut buf = String::new();
+    let config = Config::read("Cargo.toml", &mut buf).unwrap();
+
+    // check name and authors
+    assert_eq!("\"kern\"", config.value("name", "falsch"));
     assert_eq!(
         "[\"Lennart Heinrich <lennart@ltheinrich.de>\"]",
-        config.get("authors").unwrap()
+        config.value("authors", "falsch")
     );
-}
-
-#[test]
-fn from() {
-    let config = Config::from("Hallo=Du\nDas=Ist ein kleiner Test\n\n");
-    assert_eq!("Du", config.get("Hallo").unwrap());
-    assert_eq!("Ist ein kleiner Test", config.get("Das").unwrap());
-    assert_eq!(false, config.exists(""));
 }
