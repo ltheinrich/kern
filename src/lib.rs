@@ -27,8 +27,13 @@ pub fn init_version(cargo_toml: &'static str) -> &str {
         Some(version_string) => {
             // check if contains two dots
             if version_string.split('.').count() == 3 {
-                // return correct version
-                version_string
+                // check if it is actually version
+                if blocks[2].contains("version") {
+                    // return correct version
+                    version_string
+                } else {
+                    check_version(&blocks, 0)
+                }
             } else {
                 // check first version
                 check_version(&blocks, 0)
@@ -51,8 +56,18 @@ fn check_version(blocks: &[&'static str], index: usize) -> &'static str {
         Some(version_string) => {
             // check if contains two dots
             if version_string.split('.').count() == 3 {
-                // return correct version
-                version_string
+                // check if it is actually version
+                match blocks.get(index - 1) {
+                    Some(previous) => {
+                        if previous.contains("version") {
+                            // return correct version
+                            version_string
+                        } else {
+                            check_version(&blocks, index + 1)
+                        }
+                    }
+                    None => check_version(&blocks, index + 1),
+                }
             } else {
                 // check next version
                 check_version(blocks, index + 1)
