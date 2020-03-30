@@ -5,6 +5,7 @@ use std::io::prelude::Read;
 use std::str::FromStr;
 
 /// Configuration file parser
+#[derive(Clone, Debug)]
 pub struct Config<'a> {
     conf: BTreeMap<&'a str, &'a str>,
 }
@@ -29,6 +30,11 @@ impl<'a> Config<'a> {
     /// Check whether key exists in config
     pub fn exists(&self, name: &str) -> bool {
         self.conf.contains_key(name)
+    }
+
+    /// Get config key/value map
+    pub fn conf(&self) -> &BTreeMap<&str, &str> {
+        &self.conf
     }
 
     /// Read config from file
