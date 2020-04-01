@@ -9,7 +9,7 @@ pub use cli::Command;
 pub use conf::Config;
 pub use error::Fail;
 
-// Version string
+/// Version string
 static mut VERSION: &str = "";
 
 /// Get version (unsafe, but should be safe unless VERSION is being modified)
@@ -50,7 +50,7 @@ pub fn init_version(cargo_toml: &'static str) -> &str {
     version()
 }
 
-// Return version string else check next
+/// Return version string else check next
 fn check_version(blocks: &[&'static str], index: usize) -> &'static str {
     // get string at index
     match blocks.get(index) {

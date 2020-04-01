@@ -1,6 +1,5 @@
 use kern::Command;
 
-// Test for Command
 #[test]
 fn command() {
     // define possible options and arguments
@@ -38,7 +37,6 @@ fn command() {
     assert_eq!(command_wo.arguments().len(), 5);
 }
 
-// generate arguments for Command
 fn generate_arguments() -> Vec<String> {
     // initialize arguments list and add arguments
     let mut arguments = Vec::new();
@@ -64,7 +62,6 @@ fn generate_arguments() -> Vec<String> {
     arguments
 }
 
-// check Command values
 fn check_command(command: &Command) {
     // check command name
     assert_eq!(command.command(), "command");
