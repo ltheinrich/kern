@@ -12,69 +12,64 @@ pub use error::Fail;
 /// Version string
 static mut VERSION: &str = "";
 
+// Name string
+static mut NAME: &str = "";
+
 /// Get version (unsafe, but should be safe unless VERSION is being modified)
 pub fn version() -> &'static str {
     unsafe { VERSION }
 }
 
+/// Get name (unsafe, but should be safe unless NAME is being modified)
+pub fn name() -> &'static str {
+    unsafe { NAME }
+}
+
 /// Get version string from a Cargo.toml (unsafe, modifies VERSION)
 pub fn init_version(cargo_toml: &'static str) -> &str {
-    // split by "
-    let blocks: Vec<&str> = cargo_toml.split('"').collect();
-
-    // get fourth string
-    let version_string = match blocks.get(3) {
-        Some(version_string) => {
-            // check if contains two dots
-            let mut split = version_string.split('-');
-            if split.clone().count() <= 2 && split.next().unwrap().split('.').count() == 3 {
-                // check if it is actually version
-                if blocks[2].contains("version") {
-                    // return correct version
-                    version_string
-                } else {
-                    check_version(&blocks, 0)
-                }
-            } else {
-                // check first version
-                check_version(&blocks, 0)
-            }
-        }
-        None => check_version(&blocks, 0),
-    };
-
     // modifiy VERSION and return
     unsafe {
-        VERSION = version_string;
+        VERSION = search(cargo_toml, "version=").unwrap_or("0.0.0");
     }
     version()
 }
 
-/// Return version string else check next
-fn check_version(blocks: &[&'static str], index: usize) -> &'static str {
-    // get string at index
-    match blocks.get(index) {
-        Some(version_string) => {
-            // check if contains two dots
-            let mut split = version_string.split('-');
-            if split.clone().count() <= 2 && split.next().unwrap().split('.').count() == 3 {
-                // check if it is actually version
-                match blocks.get(index - 1) {
-                    Some(previous) => {
-                        if previous.contains("version") {
-                            // return correct version
-                            version_string
-                        } else {
-                            check_version(&blocks, index + 1)
-                        }
-                    }
-                    None => check_version(&blocks, index + 1),
-                }
-            } else {
-                // check next version
-                check_version(blocks, index + 1)
-            }
-        }
-        None => "0.0.0",
+/// Get name string from a Cargo.toml (unsafe, modifies NAME)
+pub fn init_name(cargo_toml: &'static str) -> &str {
+    unsafe {
+        NAME = search(cargo_toml, "name=").unwrap_or("lhi");
     }
+    name()
+}
+
+/// Search value of key (key must end with =) in cargo_toml
+fn search(cargo_toml: &'static str, key: &str) -> Option<&'static str> {
+    // split by "
+    let blocks: Vec<&str> = cargo_toml.split('"').collect();
+
+    // iterate through blocks
+    let mut value_string = None;
+    for (i, &block) in blocks.iter().enumerate() {
+        // first is never key
+        if i == 0 {
+            continue;
+        }
+
+        // get cleaned/trimmed previous block
+        let previous_block = blocks[i - 1]
+            .splitn(2, '\n')
+            .nth(1)
+            .unwrap_or(blocks[i - 1])
+            .replace(' ', "");
+
+        // check if previous block was key
+        if previous_block == key {
+            // set value and break
+            value_string = Some(block);
+            break;
+        }
+    }
+
+    // return
+    value_string
 }
