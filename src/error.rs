@@ -1,3 +1,5 @@
+//! Custom error
+
 use std::error::Error;
 use std::fmt::{Display, Formatter, Result as FmtResult};
 

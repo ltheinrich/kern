@@ -1,3 +1,5 @@
+//! Configuration utilities
+
 use crate::Fail;
 use std::collections::BTreeMap;
 use std::fs::File;

@@ -1,3 +1,5 @@
+//! Command-line interface utilities
+
 use std::collections::BTreeMap;
 use std::str::FromStr;
 
