@@ -1,6 +1,6 @@
 [package]
 name = "kern"
-version = "1.1.5"
+version = "1.1.6"
 authors = ["Lennart Heinrich <lennart@ltheinrich.de>"]
 edition = "2018"
 license = "ISC"

@@ -2,12 +2,16 @@ use kern::byte::{scan, split, splitn};
 
 #[test]
 fn test_splitn() {
-    let v = vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1, 2, 3, 4, 5, 6];
-    let s = splitn(2, &v, &[2, 3]);
+    let v = vec![
+        1, 2, 3, 0, 0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 0, 1, 2, 3, 0, 0, 1, 2, 3,
+    ];
+    let s = splitn(4, &v, &[0, 0]);
 
-    assert_eq!(s.len(), 2);
-    assert_eq!(s[0].len(), 2);
-    assert_eq!(s[1].len(), 13);
+    assert_eq!(s.len(), 4);
+    assert_eq!(s[0].len(), 3);
+    assert_eq!(s[1].len(), 3);
+    assert_eq!(s[2].len(), 3);
+    assert_eq!(s[3].len(), 13);
 }
 
 #[test]
