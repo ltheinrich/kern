@@ -14,7 +14,7 @@ use std::fmt::{Display, Formatter, Result as FmtResult};
 ///
 /// println!("{}", do_something().unwrap_err());
 /// ```
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 pub struct Fail(String);
 
 // Fail implementation
