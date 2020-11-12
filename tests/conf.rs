@@ -27,8 +27,8 @@ fn read() {
     let mut buf = String::new();
     let config = Config::read("Cargo.toml", &mut buf).unwrap();
 
-    // check name and authors
-    assert_eq!("\"kern\"", config.value("name", "falsch"));
+    // check license and authors
+    assert_eq!("\"ISC\"", config.value("license", "falsch"));
     assert_eq!(
         "[\"Lennart Heinrich <lennart@ltheinrich.de>\"]",
         config.value("authors", "falsch")

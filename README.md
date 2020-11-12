@@ -6,6 +6,12 @@ General library for Rust
 ## What is Kern?
 Kern is a general-use library for the Rust programming language
 
+## kern::http (feature)
+```
+[dependencies]
+kern = { version = "1", features = ["http"] }
+```
+
 ## Using Kern
 Requirements
  - Rust

@@ -1,9 +1,20 @@
 [package]
 name = "kern"
-version = "1.1.6"
+version = "1.2.0"
 authors = ["Lennart Heinrich <lennart@ltheinrich.de>"]
 edition = "2018"
 license = "ISC"
-repository = "https://github.com/ltheinrich/kern"
+repository = "https://ltheinrich.de/kern"
 description = "General library for Rust"
 readme = "README.md"
+
+[dependencies]
+rustls = { version = "0.18.1", optional = true }
+
+[features]
+default = []
+http = ["rustls"]
+
+[[example]]
+name = "fileserver"
+required-features = ["http"]

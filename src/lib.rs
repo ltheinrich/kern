@@ -5,6 +5,7 @@ mod conf;
 mod error;
 
 pub mod byte;
+pub mod http;
 pub mod meta;
 
 pub use cli::Command;
