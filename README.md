@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/ltheinrich/kern/workflows/CI/badge.svg)](https://github.com/ltheinrich/kern/actions?query=workflow%3ACI)
+[![Build Status](https://ltheinrich.de/kern/workflows/CI/badge.svg)](https://ltheinrich.de/kern/actions?query=workflow%3ACI)
 
 # Kern
 General library for Rust
@@ -7,12 +7,11 @@ General library for Rust
 Kern is a general-use library for the Rust programming language
 
 ## Using Kern
-Requirements
- - Rust
- - Cargo
-
-Add to Cargo.toml `dependencies`
-> kern = "1"
+Add to Cargo.toml
+```
+[dependencies]
+kern = "1"
+```
 
 ## kern::http (feature)
 ```
