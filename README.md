@@ -1,4 +1,4 @@
-[![Build Status](https://ltheinrich.de/kern/workflows/CI/badge.svg)](https://ltheinrich.de/kern/actions?query=workflow%3ACI)
+[![Build Status](https://ltheinrich.de/kern/workflows/Rust/badge.svg)](https://ltheinrich.de/kern/actions?query=workflow%3ARust)
 
 # Kern
 General library for Rust
