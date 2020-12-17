@@ -167,13 +167,7 @@ impl<'a> Command<'a> {
                 };
 
                 // check if argument is a parameter
-                if argument.starts_with("--") {
-                    // remove preceding characters
-                    let cut = match argument.len() {
-                        len if len >= 3 => &argument[2..],
-                        _ => argument,
-                    };
-
+                if let Some(cut) = argument.strip_prefix("--") {
                     // check if option
                     if filter_options.contains(&cut) {
                         // add to options
@@ -186,13 +180,7 @@ impl<'a> Command<'a> {
                     // process parameter
                     process_split(&mut parameters, &mut parameter, &mut is_parameter, cut);
                 // check if argument is an option or short parameter
-                } else if argument.starts_with('-') {
-                    // remove preceding character
-                    let cut: &'a str = match argument.len() {
-                        len if len >= 2 => &argument[1..],
-                        _ => argument,
-                    };
-
+                } else if let Some(cut) = argument.strip_prefix('-') {
                     // check if option
                     if filter_options.contains(&cut) {
                         // add to options
