@@ -50,7 +50,7 @@ pub fn search(cargo_toml: &'static str, key: &str) -> Option<&'static str> {
             .last()
             .unwrap_or(blocks[i - 1])
             .replace(' ', "");
-        dbg!(&previous_block);
+
         // check if previous block was key
         if previous_block == key {
             // set value and break
