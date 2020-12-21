@@ -46,11 +46,11 @@ pub fn search(cargo_toml: &'static str, key: &str) -> Option<&'static str> {
 
         // get cleaned/trimmed previous block
         let previous_block = blocks[i - 1]
-            .splitn(2, '\n')
-            .nth(1)
+            .split('\n')
+            .last()
             .unwrap_or(blocks[i - 1])
             .replace(' ', "");
-
+        dbg!(&previous_block);
         // check if previous block was key
         if previous_block == key {
             // set value and break
