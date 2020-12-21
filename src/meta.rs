@@ -32,7 +32,7 @@ pub fn init_name(cargo_toml: &'static str) -> &str {
 }
 
 /// Search value of key (key must end with =) in cargo_toml
-fn search(cargo_toml: &'static str, key: &str) -> Option<&'static str> {
+pub fn search(cargo_toml: &'static str, key: &str) -> Option<&'static str> {
     // split by "
     let blocks: Vec<&str> = cargo_toml.split('"').collect();
 
