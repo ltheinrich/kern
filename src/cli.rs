@@ -105,11 +105,8 @@ impl<'a> Command<'a> {
     /// Create a new Command from raw command line arguments
     /// Provide the arguments list as &[&str]
     pub fn from(raw: &'a [String], filter_options: &[&str]) -> Self {
-        // define command name
-        let command = match raw.get(0) {
-            Some(command) => command,
-            None => "",
-        };
+        // define command nam
+        let command = if raw.is_empty() { "" } else { &raw[0] };
 
         // define variables
         let mut parameters: BTreeMap<&str, &str> = BTreeMap::new();

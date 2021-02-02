@@ -1,7 +1,7 @@
 //! Byte-level operations
 
 /// Split bytes at most n times
-pub fn splitn<'a, D: AsRef<[u8]>>(n: usize, data: &'a D, sep: impl AsRef<[u8]>) -> Vec<&'a [u8]> {
+pub fn splitn<D: AsRef<[u8]>>(n: usize, data: &D, sep: impl AsRef<[u8]>) -> Vec<&[u8]> {
     // as ref
     let sep = sep.as_ref();
     let mut data = data.as_ref();
@@ -28,7 +28,7 @@ pub fn splitn<'a, D: AsRef<[u8]>>(n: usize, data: &'a D, sep: impl AsRef<[u8]>) 
 }
 
 /// Split bytes
-pub fn split<'a, D: AsRef<[u8]>>(data: &'a D, sep: impl AsRef<[u8]>) -> Vec<&'a [u8]> {
+pub fn split<D: AsRef<[u8]>>(data: &D, sep: impl AsRef<[u8]>) -> Vec<&[u8]> {
     // as ref
     let sep = sep.as_ref();
     let mut data = data.as_ref();
