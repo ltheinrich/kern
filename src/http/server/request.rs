@@ -10,8 +10,8 @@ use std::io::prelude::Read;
 /// HTTP request method (GET or POST)
 #[derive(Debug, PartialEq)]
 pub enum HttpMethod {
-    GET,
-    POST,
+    Get,
+    Post,
 }
 
 /// HTTP request structure
@@ -95,9 +95,9 @@ impl<'a> HttpRequest<'a> {
             .ok_or_else(|| Fail::new("No method in header"))?
             == "POST"
         {
-            HttpMethod::POST
+            HttpMethod::Post
         } else {
-            HttpMethod::GET
+            HttpMethod::Get
         };
 
         // parse url and split raw get parameters

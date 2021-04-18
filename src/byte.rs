@@ -1,13 +1,13 @@
 //! Byte-level operations
 
 /// Split bytes at most n times
-pub fn splitn<D: AsRef<[u8]>>(n: usize, data: &D, sep: impl AsRef<[u8]>) -> Vec<&[u8]> {
+pub fn splitn<D: AsRef<[u8]>>(n: usize, data: &D, seperator: impl AsRef<[u8]>) -> Vec<&[u8]> {
     // as ref
-    let sep = sep.as_ref();
+    let sep = seperator.as_ref();
     let mut data = data.as_ref();
 
     // scan for seperator position
-    let mut buf = Vec::new();
+    let mut buf = Vec::with_capacity(n);
     while let Some(pos) = scan(&data, &sep) {
         // check if n-length reached
         if buf.len() + 1 == n {
@@ -28,9 +28,9 @@ pub fn splitn<D: AsRef<[u8]>>(n: usize, data: &D, sep: impl AsRef<[u8]>) -> Vec<
 }
 
 /// Split bytes
-pub fn split<D: AsRef<[u8]>>(data: &D, sep: impl AsRef<[u8]>) -> Vec<&[u8]> {
+pub fn split<D: AsRef<[u8]>>(data: &D, seperator: impl AsRef<[u8]>) -> Vec<&[u8]> {
     // as ref
-    let sep = sep.as_ref();
+    let sep = seperator.as_ref();
     let mut data = data.as_ref();
 
     // scan for seperator position
@@ -50,10 +50,10 @@ pub fn split<D: AsRef<[u8]>>(data: &D, sep: impl AsRef<[u8]>) -> Vec<&[u8]> {
 }
 
 /// Returns index of first byte in pattern
-pub fn scan(data: impl AsRef<[u8]>, pat: impl AsRef<[u8]>) -> Option<usize> {
+pub fn scan(data: impl AsRef<[u8]>, pattern: impl AsRef<[u8]>) -> Option<usize> {
     // as ref
     let data: &[u8] = data.as_ref();
-    let pat: &[u8] = pat.as_ref();
+    let pat: &[u8] = pattern.as_ref();
 
     // checks
     if pat.len() > data.len() {

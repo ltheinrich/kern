@@ -121,7 +121,7 @@ fn read_header(
                     stream.read(&mut buf_temp).or_else(Fail::from)?;
 
                     // combine buffers and compare bytes
-                    let mut buf2 = [&buf[..], &buf_temp[..]].concat();
+                    let mut buf2 = [buf, &buf_temp].concat();
                     let header_end =
                         buf2[i + 1] == b'\n' && buf2[i + 2] == b'\r' && buf2[i + 3] == b'\n';
 
