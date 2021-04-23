@@ -13,7 +13,7 @@ fn command() {
     let command = builder
         .clone()
         .options(&options)
-        .paramopt(&paramopts)
+        .paramopts(&paramopts)
         .build(&arguments);
     let command_wo = builder.build(&arguments_wo);
 

@@ -38,8 +38,8 @@ impl<'a> CliBuilder<'a> {
     }
 
     /// Set list for parameter or option (not a parameter if value starts with "-")
-    pub fn paramopt(mut self, paramopt: &'a [&str]) -> Self {
-        self.paramopts = paramopt;
+    pub fn paramopts(mut self, paramopts: &'a [&str]) -> Self {
+        self.paramopts = paramopts;
         self
     }
 
@@ -106,18 +106,11 @@ impl<'a> CliBuilder<'a> {
                 // check if argument is a parameter
                 if let Some(cut) = argument.strip_prefix("--") {
                     // check if option
-                    if self.paramopts.contains(&cut)
-                        && raw
-                            .get(index + 1)
-                            .unwrap_or(&String::new())
-                            .starts_with("-")
+                    if self.options.contains(&cut)
+                        || self.paramopts.contains(&cut)
+                            && raw.get(index + 1).unwrap_or(&String::new()).chars().nth(0)
+                                == Some('-')
                     {
-                        // add to options
-                        options.push(cut);
-
-                        // continue with next argument
-                        continue;
-                    } else if self.options.contains(&cut) {
                         // add to options
                         options.push(cut);
 
@@ -130,18 +123,11 @@ impl<'a> CliBuilder<'a> {
                 // check if argument is an option or short parameter
                 } else if let Some(cut) = argument.strip_prefix('-') {
                     // check if option
-                    if self.paramopts.contains(&cut)
-                        && raw
-                            .get(index + 1)
-                            .unwrap_or(&String::new())
-                            .starts_with("-")
+                    if self.options.contains(&cut)
+                        || self.paramopts.contains(&cut)
+                            && raw.get(index + 1).unwrap_or(&String::new()).chars().nth(0)
+                                == Some('-')
                     {
-                        // add to options
-                        options.push(cut);
-
-                        // continue with next argument
-                        continue;
-                    } else if self.options.contains(&cut) {
                         // add to options
                         options.push(cut);
 
