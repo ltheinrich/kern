@@ -1,14 +1,21 @@
-use kern::Command;
+use kern::{CliBuilder, Command};
 
 #[test]
 fn command() {
     // define possible options and arguments
     let options = ["option1", "option2", "option3"];
-    let arguments = generate_arguments();
+    let paramopts = ["paramopt1", "paramopt2"];
+    let arguments = generate_arguments(true);
+    let arguments_wo = generate_arguments(false);
 
     // parse commands
-    let command = Command::from(&arguments, &options);
-    let command_wo = Command::without_options(&arguments);
+    let builder = CliBuilder::new();
+    let command = builder
+        .clone()
+        .options(&options)
+        .paramopt(&paramopts)
+        .build(&arguments);
+    let command_wo = builder.build(&arguments_wo);
 
     // check both commands
     check_command(&command);
@@ -21,8 +28,8 @@ fn command() {
     assert_eq!(command.option("m"), true);
     assert_eq!(command.option("s"), true);
     assert_eq!(command.option("o"), true);
-    assert_eq!(command.parameters().len(), 8);
-    assert_eq!(command.options().len(), 5);
+    assert_eq!(command.parameters().len(), 9);
+    assert_eq!(command.options().len(), 6);
     assert_eq!(command.arguments().len(), 5);
 
     // check specific for command_wo
@@ -37,7 +44,7 @@ fn command() {
     assert_eq!(command_wo.arguments().len(), 5);
 }
 
-fn generate_arguments() -> Vec<String> {
+fn generate_arguments(paramopts: bool) -> Vec<String> {
     // initialize arguments list and add arguments
     let mut arguments = Vec::new();
     arguments.push("command".into());
@@ -50,8 +57,15 @@ fn generate_arguments() -> Vec<String> {
     arguments.push("-mso".into());
     arguments.push("--param3".into());
     arguments.push("value3".into());
+    if paramopts {
+        arguments.push("--paramopt1".into());
+    }
     arguments.push("--param4".into());
     arguments.push("value4".into());
+    if paramopts {
+        arguments.push("--paramopt2".into());
+        arguments.push("value2".into());
+    }
     arguments.push("some".into());
     arguments.push("more".into());
     arguments.push("arguments".into());

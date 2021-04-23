@@ -8,6 +8,6 @@ pub mod byte;
 pub mod http;
 pub mod meta;
 
-pub use cli::Command;
+pub use cli::{CliBuilder, Command};
 pub use conf::Config;
 pub use error::Fail;
