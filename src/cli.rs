@@ -108,8 +108,10 @@ impl<'a> CliBuilder<'a> {
                     // check if option
                     if self.options.contains(&cut)
                         || self.paramopts.contains(&cut)
-                            && raw.get(index + 1).unwrap_or(&String::new()).chars().next()
-                                == Some('-')
+                            && raw
+                                .get(index + 1)
+                                .unwrap_or(&String::new())
+                                .starts_with('-')
                     {
                         // add to options
                         options.push(cut);
@@ -125,8 +127,10 @@ impl<'a> CliBuilder<'a> {
                     // check if option
                     if self.options.contains(&cut)
                         || self.paramopts.contains(&cut)
-                            && raw.get(index + 1).unwrap_or(&String::new()).chars().next()
-                                == Some('-')
+                            && raw
+                                .get(index + 1)
+                                .unwrap_or(&String::new())
+                                .starts_with('-')
                     {
                         // add to options
                         options.push(cut);
