@@ -21,6 +21,7 @@ fn main() {
             *num += 1;
             dbg!(*num);
             let req = req?;
+            println!("New request from IP: {}", req.ip());
             let filename = req
                 .get()
                 .get("file")

@@ -5,10 +5,13 @@ use crate::http::{name, version};
 use crate::Fail;
 
 use rustls::{ServerConfig, ServerSession, Stream as RustlsStream};
-use std::io::prelude::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, RwLock};
 use std::thread;
+use std::{
+    io::prelude::{Read, Write},
+    net::SocketAddr,
+};
 
 /// Accept connections
 pub fn accept_connections<T: Send + Sync + 'static>(
@@ -20,7 +23,7 @@ pub fn accept_connections<T: Send + Sync + 'static>(
 ) {
     loop {
         // accept connection
-        if let Ok((stream, _)) = listener.read().unwrap().accept() {
+        if let Ok((stream, address)) = listener.read().unwrap().accept() {
             // clones
             let http_settings = http_settings.clone();
             let tls_config = tls_config.clone();
@@ -29,7 +32,8 @@ pub fn accept_connections<T: Send + Sync + 'static>(
             // spawn new thread
             thread::spawn(move || {
                 // handle connection
-                handle_connection(stream, &http_settings, tls_config, handler, shared).ok();
+                handle_connection(stream, address, &http_settings, tls_config, handler, shared)
+                    .ok();
             });
         }
     }
@@ -38,6 +42,7 @@ pub fn accept_connections<T: Send + Sync + 'static>(
 /// Handle connection
 pub fn handle_connection<T: Send + Sync + 'static>(
     mut stream: TcpStream,
+    address: SocketAddr,
     http_settings: &HttpSettings,
     tls_config: Arc<ServerConfig>,
     handler: Handler<T>,
@@ -59,7 +64,8 @@ pub fn handle_connection<T: Send + Sync + 'static>(
     let response = match read_header(&mut stream, http_settings) {
         Ok((header, rest)) => {
             // parse HTTP request and process
-            let http_request = HttpRequest::from(&header, rest, &mut stream, http_settings);
+            let http_request =
+                HttpRequest::from(&header, rest, &mut stream, address, http_settings);
             match handler(http_request, shared) {
                 Ok(response) => response,
                 Err(err) => respond(

@@ -4,8 +4,8 @@ use crate::byte::{split, splitn};
 use crate::http::server::{HttpSettings, Stream};
 use crate::Fail;
 
-use std::collections::BTreeMap;
 use std::io::prelude::Read;
+use std::{collections::BTreeMap, net::SocketAddr};
 
 /// HTTP request method (GET or POST)
 #[derive(Debug, PartialEq)]
@@ -23,6 +23,7 @@ pub struct HttpRequest<'a> {
     get: BTreeMap<String, &'a str>,
     post: BTreeMap<String, Vec<u8>>,
     body: Vec<u8>,
+    ip: String,
 }
 
 impl<'a> HttpRequest<'a> {
@@ -75,11 +76,18 @@ impl<'a> HttpRequest<'a> {
         &self.body
     }
 
+    /// Get IP address
+    pub fn ip(&self) -> &str {
+        // return IP address string
+        &self.ip
+    }
+
     /// Parse HTTP request
     pub fn from(
         raw_header: &'a str,
         mut raw_body: Vec<u8>,
         stream: &mut Stream,
+        address: SocketAddr,
         http_settings: &HttpSettings,
     ) -> Result<Self, Fail> {
         // split header
@@ -183,6 +191,7 @@ impl<'a> HttpRequest<'a> {
             get,
             post,
             body,
+            ip: address.ip().to_string(),
         })
     }
 }
