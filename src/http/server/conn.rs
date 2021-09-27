@@ -4,7 +4,7 @@ use crate::http::server::{respond, Handler, HttpRequest, HttpSettings, ResponseD
 use crate::http::{name, version};
 use crate::Fail;
 
-use rustls::{ServerConfig, ServerSession, Stream as RustlsStream};
+use rustls::{ServerConfig, ServerConnection, Stream as RustlsStream};
 use std::net::{TcpListener, TcpStream};
 use std::sync::{Arc, RwLock};
 use std::thread;
@@ -57,7 +57,8 @@ pub fn handle_connection<T: Send + Sync + 'static>(
         .or_else(Fail::from)?;
 
     // create TLS connection
-    let mut session = ServerSession::new(&tls_config);
+    let mut session = ServerConnection::new(tls_config)
+        .or_else(|_| Fail::from("could not initialize server connection"))?;
     let mut stream = RustlsStream::new(&mut session, &mut stream);
 
     // read header
@@ -124,7 +125,7 @@ fn read_header(
                 if buf.len() < i + 4 {
                     // read 3 more bytes
                     let mut buf_temp = vec![0u8; i + 4 - buf.len()];
-                    stream.read(&mut buf_temp).or_else(Fail::from)?;
+                    stream.read_exact(&mut buf_temp).or_else(Fail::from)?;
 
                     // combine buffers and compare bytes
                     let mut buf2 = [buf, &buf_temp].concat();
@@ -155,7 +156,7 @@ fn read_header(
             // last byte reached, but end not reached yet
             if buf.len() == i + 1 {
                 // add buffer to header
-                header.extend_from_slice(&buf);
+                header.extend_from_slice(buf);
             }
         }
 

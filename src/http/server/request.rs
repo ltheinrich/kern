@@ -63,7 +63,7 @@ impl<'a> HttpRequest<'a> {
         let mut post_utf8 = BTreeMap::new();
         for (k, v) in &self.post {
             // parse and insert
-            post_utf8.insert(k.to_string(), String::from_utf8_lossy(&v).to_string());
+            post_utf8.insert(k.to_string(), String::from_utf8_lossy(v).to_string());
         }
 
         // return new UTF-8 POST parameters map

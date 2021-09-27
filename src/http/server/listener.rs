@@ -3,8 +3,10 @@
 use crate::http::server::{accept_connections, Handler, HttpSettings};
 use crate::Fail;
 
-use rustls::internal::pemfile::{certs, pkcs8_private_keys, rsa_private_keys};
-use rustls::{NoClientAuth, ServerConfig};
+use rustls::server::ServerConfig;
+use rustls::{Certificate, PrivateKey};
+use rustls_pemfile::Item::{PKCS8Key, RSAKey};
+use rustls_pemfile::{certs, read_one};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -51,58 +53,28 @@ pub fn listen<T: Send + Sync + 'static>(
 /// Generate config with TLS certificate and private key
 pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfig, Fail> {
     // create config
-    let mut config = ServerConfig::new(NoClientAuth::new());
+    let config = ServerConfig::builder()
+        .with_safe_defaults()
+        .with_no_client_auth();
 
     // open certificate
     let mut cert_buf = BufReader::new(raw_cert);
-    let cert = match certs(&mut cert_buf) {
-        Ok(key) => key,
-        Err(_) => return Fail::from("broken certificate"),
-    };
+    let cert = certs(&mut cert_buf)
+        .or_else(|_| Fail::from("broken certificate"))?
+        .iter()
+        .map(|v| Certificate(v.clone()))
+        .collect();
 
     // open private key
     let mut key_buf = BufReader::new(raw_key);
-    let key = match rsa_private_keys(&mut key_buf) {
-        Ok(key) => {
-            // check if key exists
-            if !key.is_empty() {
-                key[0].clone()
-            } else {
-                // open private key
-                let mut key_buf = BufReader::new(raw_key);
-                match pkcs8_private_keys(&mut key_buf) {
-                    Ok(key) => {
-                        // check if key exists
-                        if !key.is_empty() {
-                            key[0].clone()
-                        } else {
-                            return Fail::from("broken private key");
-                        }
-                    }
-                    Err(_) => return Fail::from("broken private key"),
-                }
-            }
-        }
-        Err(_) => {
-            // open private key
-            let mut key_buf = BufReader::new(raw_key);
-            match pkcs8_private_keys(&mut key_buf) {
-                Ok(key) => {
-                    // check if key exists
-                    if !key.is_empty() {
-                        key[0].clone()
-                    } else {
-                        return Fail::from("broken private key");
-                    }
-                }
-                Err(_) => return Fail::from("broken private key"),
-            }
-        }
+    let key = match read_one(&mut key_buf).or_else(|_| Fail::from("broken private key"))? {
+        Some(RSAKey(key)) => PrivateKey(key),
+        Some(PKCS8Key(key)) => PrivateKey(key),
+        _ => return Fail::from("broken private key"),
     };
 
-    // add certificate to config and return
-    config.set_single_cert(cert, key).or_else(Fail::from)?;
-    Ok(config)
+    // return config with certificate
+    config.with_single_cert(cert, key).or_else(Fail::from)
 }
 
 /// Generate config with TLS certificate and private key from file
