@@ -16,7 +16,7 @@ use std::str::FromStr;
 /// ```
 #[derive(Clone, Debug, Default)]
 pub struct CliBuilder<'a> {
-    raw: &'a str,
+    // raw: &'a str,
     options: &'a [&'a str],
     paramopts: &'a [&'a str],
 }
@@ -25,7 +25,7 @@ impl<'a> CliBuilder<'a> {
     /// Empty configuration for command-line parsing
     pub fn new() -> Self {
         Self {
-            raw: "",
+            // raw: "",
             options: &[],
             paramopts: &[],
         }
