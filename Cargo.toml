@@ -9,7 +9,7 @@ description = "General library for Rust"
 readme = "README.md"
 
 [dependencies]
-rustls = { version = "0.20.5", optional = true }
+rustls = { version = "0.20.6", optional = true }
 rustls-pemfile = { version = "1.0.0", optional = true }
 
 [features]
