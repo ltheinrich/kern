@@ -8,7 +8,7 @@ use std::io::prelude::Read;
 use std::{collections::BTreeMap, net::SocketAddr};
 
 /// HTTP request method (GET or POST)
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Eq)]
 pub enum HttpMethod {
     Get,
     Post,
