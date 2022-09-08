@@ -7,6 +7,7 @@ license = "ISC"
 repository = "https://ltheinrich.de/kern"
 description = "General library for Rust"
 readme = "README.md"
+documentation = "https://docs.rs/kern"
 
 [dependencies]
 rustls = { version = "0.20.6", optional = true }
