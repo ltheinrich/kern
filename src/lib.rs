@@ -11,4 +11,4 @@ pub mod meta;
 
 pub use cli::{CliBuilder, Command};
 pub use conf::Config;
-pub use error::Fail;
+pub use error::{Error, Fail};

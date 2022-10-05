@@ -1,7 +1,10 @@
 //! Custom error
 
-use std::error::Error;
+use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+
+/// Error return type
+pub type Error = Box<dyn StdError>;
 
 /// Fail structure
 /// ```
@@ -42,7 +45,7 @@ impl Fail {
 }
 
 /// std::error::Error implementation for Fail
-impl Error for Fail {}
+impl StdError for Fail {}
 
 /// Display implementation for Fail
 impl Display for Fail {
