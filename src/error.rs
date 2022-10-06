@@ -26,7 +26,7 @@ pub struct Fail(pub String);
 
 // Fail implementation
 impl Fail {
-    /// Create Fail from any Display
+    /// Create bxoed Fail from any Display
     pub fn new<E>(err: E) -> Box<Self>
     where
         E: Display,
@@ -34,12 +34,20 @@ impl Fail {
         Box::new(Fail(err.to_string()))
     }
 
-    /// Create Result with Fail from any Display
+    /// Create Result with boxed Fail from any Display
     pub fn from<T, E>(err: E) -> Result<T>
     where
         E: Display,
     {
         Err(Self::new(err))
+    }
+
+    /// Create StdResult with Fail from any Display
+    pub fn std<T, E>(err: E) -> StdResult<T, Self>
+    where
+        E: Display,
+    {
+        Err(Fail(err.to_string()))
     }
 
     /// Get error message
