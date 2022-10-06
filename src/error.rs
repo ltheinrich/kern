@@ -2,15 +2,19 @@
 
 use std::error::Error as StdError;
 use std::fmt::{Display, Formatter, Result as FmtResult};
+use std::result::Result as StdResult;
 
 /// Error return type
 pub type Error = Box<dyn StdError>;
 
+/// Result return type
+pub type Result<T> = StdResult<T, Box<dyn StdError>>;
+
 /// Fail structure
 /// ```
-/// use kern::Fail;
+/// use kern::{Fail, Result};
 ///
-/// fn do_something() -> Result<(), Fail> {
+/// fn do_something() -> Result<()> {
 ///     let err = Fail::new("This is an error");
 ///     Fail::from(err)
 /// }
@@ -18,20 +22,20 @@ pub type Error = Box<dyn StdError>;
 /// println!("{}", do_something().unwrap_err());
 /// ```
 #[derive(Clone, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
-pub struct Fail(String);
+pub struct Fail(pub String);
 
 // Fail implementation
 impl Fail {
     /// Create Fail from any Display
-    pub fn new<E>(err: E) -> Self
+    pub fn new<E>(err: E) -> Box<Self>
     where
         E: Display,
     {
-        Fail(err.to_string())
+        Box::new(Fail(err.to_string()))
     }
 
     /// Create Result with Fail from any Display
-    pub fn from<T, E>(err: E) -> Result<T, Self>
+    pub fn from<T, E>(err: E) -> Result<T>
     where
         E: Display,
     {

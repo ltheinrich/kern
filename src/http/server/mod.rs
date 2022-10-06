@@ -11,7 +11,7 @@ pub use listener::*;
 pub use request::*;
 pub use response::*;
 
-use crate::Fail;
+use crate::Result;
 
 use rustls::{ServerConnection, Stream as RustlsStream};
 use std::net::TcpStream;
@@ -22,7 +22,7 @@ use std::time::Duration;
 pub type Stream<'a> = RustlsStream<'a, ServerConnection, TcpStream>;
 
 /// Handler function
-pub type Handler<T> = fn(Result<HttpRequest, Fail>, Arc<RwLock<T>>) -> Result<Vec<u8>, Fail>;
+pub type Handler<T> = fn(Result<HttpRequest>, Arc<RwLock<T>>) -> Result<Vec<u8>>;
 
 /// HTTP server settings
 #[derive(Clone, Debug, Default)]

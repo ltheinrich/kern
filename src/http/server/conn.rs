@@ -2,7 +2,7 @@
 
 use crate::http::server::{respond, Handler, HttpRequest, HttpSettings, ResponseData, Stream};
 use crate::http::{name, version};
-use crate::Fail;
+use crate::{Fail, Result};
 
 use rustls::{ServerConfig, ServerConnection, Stream as RustlsStream};
 use std::net::{TcpListener, TcpStream};
@@ -47,14 +47,10 @@ pub fn handle_connection<T: Send + Sync + 'static>(
     tls_config: Arc<ServerConfig>,
     handler: Handler<T>,
     shared: Arc<RwLock<T>>,
-) -> Result<(), Fail> {
+) -> Result<()> {
     // set timeouts
-    stream
-        .set_read_timeout(http_settings.read_timeout)
-        .or_else(Fail::from)?;
-    stream
-        .set_write_timeout(http_settings.write_timeout)
-        .or_else(Fail::from)?;
+    stream.set_read_timeout(http_settings.read_timeout)?;
+    stream.set_write_timeout(http_settings.write_timeout)?;
 
     // create TLS connection
     let mut session = ServerConnection::new(tls_config)
@@ -76,7 +72,7 @@ pub fn handle_connection<T: Send + Sync + 'static>(
             }
         }
         Err(err) => {
-            if err.err_msg() == "received corrupt message" {
+            if err.to_string() == "received corrupt message" {
                 return Fail::from("Not a TLS connection");
             }
             respond(
@@ -88,18 +84,15 @@ pub fn handle_connection<T: Send + Sync + 'static>(
     };
 
     // respond
-    stream.write_all(&response).or_else(Fail::from)?;
-    stream.flush().or_else(Fail::from)?;
+    stream.write_all(&response)?;
+    stream.flush()?;
 
     // done
     Ok(())
 }
 
 /// Read until \r\n\r\n
-fn read_header(
-    stream: &mut Stream,
-    http_settings: &HttpSettings,
-) -> Result<(String, Vec<u8>), Fail> {
+fn read_header(stream: &mut Stream, http_settings: &HttpSettings) -> Result<(String, Vec<u8>)> {
     // initialize vectors
     let mut header = Vec::new();
     let mut rest = Vec::new();
@@ -109,7 +102,7 @@ fn read_header(
     let mut read_fails = 0;
     'l: loop {
         // read from stream and check max header size
-        let length = stream.read(&mut buf).or_else(Fail::from)?;
+        let length = stream.read(&mut buf)?;
         if header.len() + length > http_settings.max_header_size {
             return Fail::from("Max header size exceeded");
         }
@@ -125,7 +118,7 @@ fn read_header(
                 if buf.len() < i + 4 {
                     // read 3 more bytes
                     let mut buf_temp = vec![0u8; i + 4 - buf.len()];
-                    stream.read_exact(&mut buf_temp).or_else(Fail::from)?;
+                    stream.read_exact(&mut buf_temp)?;
 
                     // combine buffers and compare bytes
                     let mut buf2 = [buf, &buf_temp].concat();

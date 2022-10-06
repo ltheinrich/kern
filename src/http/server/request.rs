@@ -2,7 +2,7 @@
 
 use crate::byte::{split, splitn};
 use crate::http::server::{HttpSettings, Stream};
-use crate::Fail;
+use crate::{Fail, Result};
 
 use std::io::prelude::Read;
 use std::{collections::BTreeMap, net::SocketAddr};
@@ -89,7 +89,7 @@ impl<'a> HttpRequest<'a> {
         stream: &mut Stream,
         address: SocketAddr,
         http_settings: &HttpSettings,
-    ) -> Result<Self, Fail> {
+    ) -> Result<Self> {
         // split header
         let mut header = raw_header.lines();
         let mut reqln = header
@@ -197,10 +197,7 @@ impl<'a> HttpRequest<'a> {
 }
 
 /// Parse POST parameters to map
-fn parse_post(
-    headers: &BTreeMap<String, &str>,
-    body: &[u8],
-) -> Result<BTreeMap<String, Vec<u8>>, Fail> {
+fn parse_post(headers: &BTreeMap<String, &str>, body: &[u8]) -> Result<BTreeMap<String, Vec<u8>>> {
     match headers.get("content-type") {
         Some(&content_type_header) => {
             let mut content_type_header = content_type_header.split(';').map(|s| s.trim());
@@ -221,27 +218,24 @@ fn parse_post(
                             boundary.ok_or_else(|| Fail::new("post upload, but no boundary"))?,
                         )
                     } else {
-                        parse_parameters(
-                            &String::from_utf8(body.to_vec()).or_else(Fail::from)?,
-                            |v| v.as_bytes().to_vec(),
-                        )
+                        parse_parameters(&String::from_utf8(body.to_vec())?, |v| {
+                            v.as_bytes().to_vec()
+                        })
                     }
                 }
-                None => parse_parameters(
-                    &String::from_utf8(body.to_vec()).or_else(Fail::from)?,
-                    |v| v.as_bytes().to_vec(),
-                ),
+                None => parse_parameters(&String::from_utf8(body.to_vec())?, |v| {
+                    v.as_bytes().to_vec()
+                }),
             }
         }
-        None => parse_parameters(
-            &String::from_utf8(body.to_vec()).or_else(Fail::from)?,
-            |v| v.as_bytes().to_vec(),
-        ),
+        None => parse_parameters(&String::from_utf8(body.to_vec())?, |v| {
+            v.as_bytes().to_vec()
+        }),
     }
 }
 
 /// Parse POST upload to map
-fn parse_post_upload(body: &[u8], boundary: &str) -> Result<BTreeMap<String, Vec<u8>>, Fail> {
+fn parse_post_upload(body: &[u8], boundary: &str) -> Result<BTreeMap<String, Vec<u8>>> {
     // parameters map
     let mut params = BTreeMap::new();
 
@@ -306,7 +300,7 @@ fn parse_post_upload(body: &[u8], boundary: &str) -> Result<BTreeMap<String, Vec
 fn parse_parameters<'a, V>(
     raw: &'a str,
     process_value: fn(&'a str) -> V,
-) -> Result<BTreeMap<String, V>, Fail> {
+) -> Result<BTreeMap<String, V>> {
     // parameters map
     let mut params = BTreeMap::new();
 

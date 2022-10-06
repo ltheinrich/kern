@@ -1,7 +1,7 @@
 //! TCP listener
 
 use crate::http::server::{accept_connections, Handler, HttpSettings};
-use crate::Fail;
+use crate::{Fail, Result};
 
 use rustls::server::ServerConfig;
 use rustls::{Certificate, PrivateKey};
@@ -22,9 +22,9 @@ pub fn listen<T: Send + Sync + 'static>(
     tls_config: ServerConfig,
     handler: Handler<T>,
     shared: Arc<RwLock<T>>,
-) -> Result<Vec<JoinHandle<()>>, Fail> {
+) -> Result<Vec<JoinHandle<()>>> {
     // listen
-    let listener = TcpListener::bind(addr).or_else(Fail::from)?;
+    let listener = TcpListener::bind(addr)?;
     let listener = Arc::new(RwLock::new(listener));
 
     // config
@@ -51,7 +51,7 @@ pub fn listen<T: Send + Sync + 'static>(
 }
 
 /// Generate config with TLS certificate and private key
-pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfig, Fail> {
+pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfig> {
     // create config
     let config = ServerConfig::builder()
         .with_safe_defaults()
@@ -78,18 +78,18 @@ pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfi
 }
 
 /// Generate config with TLS certificate and private key from file
-pub fn load_certificate(cert_path: &str, key_path: &str) -> Result<ServerConfig, Fail> {
+pub fn load_certificate(cert_path: &str, key_path: &str) -> Result<ServerConfig> {
     // open files
-    let mut cert_file = File::open(cert_path).or_else(Fail::from)?;
-    let mut key_file = File::open(key_path).or_else(Fail::from)?;
+    let mut cert_file = File::open(cert_path)?;
+    let mut key_file = File::open(key_path)?;
 
     // create buffers
     let mut cert_buf = Vec::new();
     let mut key_buf = Vec::new();
 
     // read files
-    cert_file.read_to_end(&mut cert_buf).or_else(Fail::from)?;
-    key_file.read_to_end(&mut key_buf).or_else(Fail::from)?;
+    cert_file.read_to_end(&mut cert_buf)?;
+    key_file.read_to_end(&mut key_buf)?;
 
     // generate config and return
     certificate_config(&cert_buf, &key_buf)

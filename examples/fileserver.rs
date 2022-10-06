@@ -26,9 +26,9 @@ fn main() {
                 .get()
                 .get("file")
                 .ok_or_else(|| Fail::new("filename missing, try adding ?file=... to the url"))?;
-            let mut file = File::open(filename).or_else(Fail::from)?;
+            let mut file = File::open(filename)?;
             let mut buf = String::new();
-            file.read_to_string(&mut buf).or_else(Fail::from)?;
+            file.read_to_string(&mut buf)?;
             Ok(respond(buf, "text/html", None))
         },
         Arc::new(RwLock::new(0u32)),

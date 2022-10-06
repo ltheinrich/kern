@@ -1,6 +1,6 @@
 //! Configuration utilities
 
-use crate::Fail;
+use crate::{Fail, Result};
 use std::collections::BTreeMap;
 use std::fs::File;
 use std::io::prelude::Read;
@@ -40,8 +40,8 @@ impl<'a> Config<'a> {
     }
 
     /// Read config from file
-    pub fn read(path: &str, buf: &'a mut String) -> Result<Self, Fail> {
-        let mut file = File::open(path).or_else(Fail::from)?;
+    pub fn read(path: &str, buf: &'a mut String) -> Result<Self> {
+        let mut file = File::open(path)?;
         match file.read_to_string(buf) {
             Ok(_) => Ok(Self::from(buf)),
             Err(err) => Fail::from(err),

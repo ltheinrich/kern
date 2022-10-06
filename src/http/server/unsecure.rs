@@ -1,7 +1,7 @@
 //! HTTP to HTTPS redirecter
 
 use crate::http::server::redirect;
-use crate::Fail;
+use crate::{Fail, Result};
 
 use std::io::prelude::*;
 use std::net::TcpListener;
@@ -18,9 +18,9 @@ use std::time::Duration;
 pub fn listen_redirect(
     unsecure_addr: impl AsRef<str>,
     secure_addr: String,
-) -> Result<JoinHandle<()>, Fail> {
+) -> Result<JoinHandle<()>> {
     // listen
-    let listener = TcpListener::bind(unsecure_addr.as_ref()).or_else(Fail::from)?;
+    let listener = TcpListener::bind(unsecure_addr.as_ref())?;
     let secure_addr = Arc::new(secure_addr);
 
     // listener thread

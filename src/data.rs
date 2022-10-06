@@ -1,6 +1,6 @@
 //! Database
 
-use crate::Fail;
+use crate::{Fail, Result};
 use std::collections::BTreeMap;
 use std::fs::{remove_file, rename, File, OpenOptions};
 use std::io::prelude::*;
@@ -15,11 +15,11 @@ pub struct StorageFile {
 
 impl StorageFile {
     /// Open file or create new
-    pub fn new(file_name: impl AsRef<str>) -> Result<Self, Fail> {
+    pub fn new(file_name: impl AsRef<str>) -> Result<Self> {
         // open file and parse
         let mut file = open_file(file_name)?;
         let raw = read_file(&mut file)?;
-        let raw = String::from_utf8(raw).or_else(Fail::from)?;
+        let raw = String::from_utf8(raw)?;
         let cache = parse(&raw);
 
         // return
@@ -32,11 +32,11 @@ impl StorageFile {
     }
 
     /// Write directly to file and parse
-    pub fn raw_write(&mut self, raw: String) -> Result<(), Fail> {
+    pub fn raw_write(&mut self, raw: String) -> Result<()> {
         // parse and write to file
         self.raw = raw;
         self.cache = parse(&self.raw);
-        write_file(&mut self.file, &self.raw).or_else(Fail::from)
+        write_file(&mut self.file, &self.raw)
     }
 
     /// Get map from cache
@@ -50,15 +50,15 @@ impl StorageFile {
     }
 
     /// Serialize map to string and write to file
-    pub fn write(&mut self) -> Result<(), Fail> {
+    pub fn write(&mut self) -> Result<()> {
         // serialize and write
         self.raw = serialize(self.cache());
-        write_file(&mut self.file, &self.raw).or_else(Fail::from)
+        write_file(&mut self.file, &self.raw)
     }
 }
 
 /// Open file or create new
-pub fn open_file(file_name: impl AsRef<str>) -> Result<File, Fail> {
+pub fn open_file(file_name: impl AsRef<str>) -> Result<File> {
     // open and return file
     OpenOptions::new()
         .read(true)
@@ -69,21 +69,21 @@ pub fn open_file(file_name: impl AsRef<str>) -> Result<File, Fail> {
 }
 
 /// Delete file if exists
-pub fn delete_file(file_name: impl AsRef<str>) -> Result<(), Fail> {
+pub fn delete_file(file_name: impl AsRef<str>) -> Result<()> {
     // delete file
     remove_file(file_name.as_ref()).or_else(Fail::from)
 }
 
 /// Move file
-pub fn move_file(file_name: impl AsRef<str>, new_file_name: impl AsRef<str>) -> Result<(), Fail> {
+pub fn move_file(file_name: impl AsRef<str>, new_file_name: impl AsRef<str>) -> Result<()> {
     // delete file
     rename(file_name.as_ref(), new_file_name.as_ref()).or_else(Fail::from)
 }
 
 /// Read data from file
-pub fn read_file(file: &mut File) -> Result<Vec<u8>, Fail> {
+pub fn read_file(file: &mut File) -> Result<Vec<u8>> {
     // start from beginning
-    file.seek(std::io::SeekFrom::Start(0)).or_else(Fail::from)?;
+    file.seek(std::io::SeekFrom::Start(0))?;
 
     // create buffer
     let mut buf = Vec::with_capacity(match file.metadata() {
@@ -92,17 +92,17 @@ pub fn read_file(file: &mut File) -> Result<Vec<u8>, Fail> {
     });
 
     // read and return
-    file.read_to_end(&mut buf).or_else(Fail::from)?;
+    file.read_to_end(&mut buf)?;
     Ok(buf)
 }
 
 /// Write data to file
-pub fn write_file(file: &mut File, data: impl AsRef<[u8]>) -> Result<(), Fail> {
+pub fn write_file(file: &mut File, data: impl AsRef<[u8]>) -> Result<()> {
     // truncate file
-    file.set_len(0).or_else(Fail::from)?;
+    file.set_len(0)?;
 
     // start from first byte
-    file.seek(std::io::SeekFrom::Start(0)).or_else(Fail::from)?;
+    file.seek(std::io::SeekFrom::Start(0))?;
 
     // write data
     file.write_all(data.as_ref()).or_else(Fail::from)
