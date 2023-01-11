@@ -8,7 +8,7 @@ pub fn splitn<D: AsRef<[u8]>>(n: usize, data: &D, seperator: impl AsRef<[u8]>) -
 
     // scan for seperator position
     let mut buf = Vec::with_capacity(n);
-    while let Some(pos) = scan(&data, &sep) {
+    while let Some(pos) = scan(data, sep) {
         // check if n-length reached
         if buf.len() + 1 == n {
             break;
@@ -35,7 +35,7 @@ pub fn split<D: AsRef<[u8]>>(data: &D, seperator: impl AsRef<[u8]>) -> Vec<&[u8]
 
     // scan for seperator position
     let mut buf = Vec::new();
-    while let Some(pos) = scan(&data, &sep) {
+    while let Some(pos) = scan(data, sep) {
         // split and add to buf
         let (split, rest) = data.split_at(pos);
         buf.push(split);
