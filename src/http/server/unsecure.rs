@@ -58,7 +58,7 @@ pub fn listen_redirect(
 
                 // write redirect
                 stream
-                    .write_all(&redirect(&format!("https://{}{}", &secure_addr, url)))
+                    .write_all(&redirect(format!("https://{secure_addr}{url}")))
                     .unwrap();
                 stream.flush().unwrap();
             });
