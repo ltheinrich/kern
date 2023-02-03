@@ -240,11 +240,11 @@ fn parse_post_upload(body: &[u8], boundary: &str) -> Result<BTreeMap<String, Vec
     let mut params = BTreeMap::new();
 
     // split body into sections
-    let mut sections = split(&body, &format!("--{}\r\n", boundary));
+    let mut sections = split(&body, &format!("--{boundary}\r\n"));
     sections.remove(0);
     for mut section in sections {
         // check if last section
-        let last_sep = format!("--{}--\r\n", boundary);
+        let last_sep = format!("--{boundary}--\r\n");
         if section.ends_with(last_sep.as_bytes()) {
             // remove ending seperator from last section
             section = &section[..(section.len() - last_sep.len() - 2)];

@@ -83,7 +83,7 @@ pub fn move_file(file_name: impl AsRef<str>, new_file_name: impl AsRef<str>) -> 
 /// Read data from file
 pub fn read_file(file: &mut File) -> Result<Vec<u8>> {
     // start from beginning
-    file.seek(std::io::SeekFrom::Start(0))?;
+    file.rewind()?;
 
     // create buffer
     let mut buf = Vec::with_capacity(match file.metadata() {
@@ -102,7 +102,7 @@ pub fn write_file(file: &mut File, data: impl AsRef<[u8]>) -> Result<()> {
     file.set_len(0)?;
 
     // start from first byte
-    file.seek(std::io::SeekFrom::Start(0))?;
+    file.rewind()?;
 
     // write data
     file.write_all(data.as_ref()).or_else(Fail::from)
