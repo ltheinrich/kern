@@ -5,7 +5,7 @@ use crate::http::server::{HttpSettings, Stream};
 use crate::{Fail, Result};
 
 use std::io::prelude::Read;
-use std::{collections::BTreeMap, net::SocketAddr};
+use std::{collections::HashMap, net::SocketAddr};
 
 /// HTTP request method (GET or POST)
 #[derive(Debug, PartialEq, Eq)]
@@ -19,9 +19,9 @@ pub enum HttpMethod {
 pub struct HttpRequest<'a> {
     method: HttpMethod,
     url: &'a str,
-    headers: BTreeMap<String, &'a str>,
-    get: BTreeMap<String, &'a str>,
-    post: BTreeMap<String, Vec<u8>>,
+    headers: HashMap<String, &'a str>,
+    get: HashMap<String, &'a str>,
+    post: HashMap<String, Vec<u8>>,
     body: Vec<u8>,
     ip: String,
 }
@@ -40,27 +40,27 @@ impl<'a> HttpRequest<'a> {
     }
 
     /// Get headers map
-    pub fn headers(&self) -> &BTreeMap<String, &str> {
+    pub fn headers(&self) -> &HashMap<String, &str> {
         // return headers map
         &self.headers
     }
 
     /// Get GET parameters
-    pub fn get(&self) -> &BTreeMap<String, &str> {
+    pub fn get(&self) -> &HashMap<String, &str> {
         // return GET parameters map
         &self.get
     }
 
     /// Get POST parameters
-    pub fn post(&self) -> &BTreeMap<String, Vec<u8>> {
+    pub fn post(&self) -> &HashMap<String, Vec<u8>> {
         // return POST parameters map
         &self.post
     }
 
     /// Get POST parameters
-    pub fn post_utf8(&self) -> BTreeMap<String, String> {
+    pub fn post_utf8(&self) -> HashMap<String, String> {
         // init map and iterate through byte map
-        let mut post_utf8 = BTreeMap::new();
+        let mut post_utf8 = HashMap::new();
         for (k, v) in &self.post {
             // parse and insert
             post_utf8.insert(k.to_string(), String::from_utf8_lossy(v).to_string());
@@ -124,7 +124,7 @@ impl<'a> HttpRequest<'a> {
         };
 
         // parse headers
-        let mut headers = BTreeMap::new();
+        let mut headers = HashMap::new();
         header.for_each(|hl| {
             let mut hls = hl.splitn(2, ':');
             if let (Some(key), Some(value)) = (hls.next(), hls.next()) {
@@ -197,7 +197,7 @@ impl<'a> HttpRequest<'a> {
 }
 
 /// Parse POST parameters to map
-fn parse_post(headers: &BTreeMap<String, &str>, body: &[u8]) -> Result<BTreeMap<String, Vec<u8>>> {
+fn parse_post(headers: &HashMap<String, &str>, body: &[u8]) -> Result<HashMap<String, Vec<u8>>> {
     match headers.get("content-type") {
         Some(&content_type_header) => {
             let mut content_type_header = content_type_header.split(';').map(|s| s.trim());
@@ -235,9 +235,9 @@ fn parse_post(headers: &BTreeMap<String, &str>, body: &[u8]) -> Result<BTreeMap<
 }
 
 /// Parse POST upload to map
-fn parse_post_upload(body: &[u8], boundary: &str) -> Result<BTreeMap<String, Vec<u8>>> {
+fn parse_post_upload(body: &[u8], boundary: &str) -> Result<HashMap<String, Vec<u8>>> {
     // parameters map
-    let mut params = BTreeMap::new();
+    let mut params = HashMap::new();
 
     // split body into sections
     let mut sections = split(&body, &format!("--{boundary}\r\n"));
@@ -300,9 +300,9 @@ fn parse_post_upload(body: &[u8], boundary: &str) -> Result<BTreeMap<String, Vec
 fn parse_parameters<'a, V>(
     raw: &'a str,
     process_value: fn(&'a str) -> V,
-) -> Result<BTreeMap<String, V>> {
+) -> Result<HashMap<String, V>> {
     // parameters map
-    let mut params = BTreeMap::new();
+    let mut params = HashMap::new();
 
     // split parameters by ampersand
     for p in raw.split('&') {

@@ -1,6 +1,6 @@
 //! Command-line interface utilities
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::str::FromStr;
 
 /// Builder for command-line parsing (Command)
@@ -49,7 +49,7 @@ impl<'a> CliBuilder<'a> {
         let command = if raw.is_empty() { "" } else { &raw[0] };
 
         // define variables
-        let mut parameters: BTreeMap<&str, &str> = BTreeMap::new();
+        let mut parameters: HashMap<&str, &str> = HashMap::new();
         let mut options: Vec<&str> = Vec::new();
         let mut arguments: Vec<&str> = Vec::new();
 
@@ -77,7 +77,7 @@ impl<'a> CliBuilder<'a> {
                 is_parameter = false;
             } else {
                 // closure to process parameters using equal sign
-                let process_split = |parameters: &mut BTreeMap<&'a str, &'a str>,
+                let process_split = |parameters: &mut HashMap<&'a str, &'a str>,
                                      parameter: &mut &'a str,
                                      is_parameter: &mut bool,
                                      argument: &'a str| {
@@ -193,7 +193,7 @@ pub struct Command<'a> {
     command: &'a str,
 
     /// Map of parameters
-    parameters: BTreeMap<&'a str, &'a str>,
+    parameters: HashMap<&'a str, &'a str>,
 
     /// List of options
     options: Vec<&'a str>,
@@ -211,7 +211,7 @@ impl<'a> Command<'a> {
     }
 
     /// Get all parameters
-    pub fn parameters(&self) -> &BTreeMap<&'a str, &'a str> {
+    pub fn parameters(&self) -> &HashMap<&'a str, &'a str> {
         // return map of parameters
         &self.parameters
     }
@@ -288,7 +288,7 @@ impl<'a> Command<'a> {
     /// Create Command from given values
     fn create(
         command: &'a str,
-        parameters: BTreeMap<&'a str, &'a str>,
+        parameters: HashMap<&'a str, &'a str>,
         options: Vec<&'a str>,
         arguments: Vec<&'a str>,
     ) -> Self {

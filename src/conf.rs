@@ -1,7 +1,7 @@
 //! Configuration utilities
 
 use crate::{Fail, Result};
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::fs::File;
 use std::io::prelude::Read;
 use std::str::FromStr;
@@ -9,7 +9,7 @@ use std::str::FromStr;
 /// Configuration file parser
 #[derive(Clone, Debug)]
 pub struct Config<'a> {
-    conf: BTreeMap<&'a str, &'a str>,
+    conf: HashMap<&'a str, &'a str>,
 }
 
 impl<'a> Config<'a> {
@@ -35,7 +35,7 @@ impl<'a> Config<'a> {
     }
 
     /// Get config key/value map
-    pub fn conf(&self) -> &BTreeMap<&str, &str> {
+    pub fn conf(&self) -> &HashMap<&str, &str> {
         &self.conf
     }
 
@@ -51,7 +51,7 @@ impl<'a> Config<'a> {
     /// Create new config from raw config string
     pub fn from(raw: &'a str) -> Self {
         // initialize map
-        let mut conf = BTreeMap::new();
+        let mut conf = HashMap::new();
 
         // split lines
         raw.split('\n')

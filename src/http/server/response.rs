@@ -1,13 +1,13 @@
 //! HTTP response
 
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::convert::AsRef;
 
 /// Additional response data
 #[derive(Clone, Default, Debug)]
 pub struct ResponseData<'a> {
     pub status: &'a str,
-    pub headers: BTreeMap<&'a str, &'a str>,
+    pub headers: HashMap<&'a str, &'a str>,
 }
 
 impl<'a> ResponseData<'a> {
@@ -15,7 +15,7 @@ impl<'a> ResponseData<'a> {
     pub fn new() -> Self {
         Self {
             status: "200 OK",
-            headers: BTreeMap::new(),
+            headers: HashMap::new(),
         }
     }
 
@@ -84,7 +84,7 @@ pub fn redirect(url: impl AsRef<str>) -> Vec<u8> {
     let url = url.as_ref();
 
     // set location
-    let mut headers = BTreeMap::new();
+    let mut headers = HashMap::new();
     headers.insert("location", url);
 
     // create response data

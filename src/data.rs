@@ -1,7 +1,7 @@
 //! Database
 
 use crate::{Fail, Result};
-use std::collections::BTreeMap;
+use std::collections::HashMap;
 use std::fs::{remove_file, rename, File, OpenOptions};
 use std::io::prelude::*;
 
@@ -10,7 +10,7 @@ use std::io::prelude::*;
 pub struct StorageFile {
     file: File,
     raw: String,
-    cache: BTreeMap<String, String>,
+    cache: HashMap<String, String>,
 }
 
 impl StorageFile {
@@ -40,12 +40,12 @@ impl StorageFile {
     }
 
     /// Get map from cache
-    pub fn cache(&self) -> &BTreeMap<String, String> {
+    pub fn cache(&self) -> &HashMap<String, String> {
         &self.cache
     }
 
     /// Get map from cache mutably
-    pub fn cache_mut(&mut self) -> &mut BTreeMap<String, String> {
+    pub fn cache_mut(&mut self) -> &mut HashMap<String, String> {
         &mut self.cache
     }
 
@@ -109,9 +109,9 @@ pub fn write_file(file: &mut File, data: impl AsRef<[u8]>) -> Result<()> {
 }
 
 /// Parse storage file buf to map
-pub fn parse(buf: &str) -> BTreeMap<String, String> {
+pub fn parse(buf: &str) -> HashMap<String, String> {
     // initialize map and split lines
-    let mut conf = BTreeMap::new();
+    let mut conf = HashMap::new();
     buf.split('\n')
         // seperate and trim
         .map(|l| l.splitn(2, '=').map(|c| c.trim()).collect())
@@ -128,7 +128,7 @@ pub fn parse(buf: &str) -> BTreeMap<String, String> {
 }
 
 /// Serialize map to string
-pub fn serialize(data: &BTreeMap<String, String>) -> String {
+pub fn serialize(data: &HashMap<String, String>) -> String {
     // create buffer
     let mut buf = String::with_capacity(data.len() * 10);
 

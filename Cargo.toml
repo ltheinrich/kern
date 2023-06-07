@@ -1,8 +1,8 @@
 [package]
 name = "kern"
-version = "1.5.1"
+version = "1.6.0"
 authors = ["Lennart Heinrich <lennart@ltheinrich.de>"]
-edition = "2018"
+edition = "2021"
 license = "ISC"
 repository = "https://ltheinrich.de/kern"
 description = "General library for Rust"
