@@ -4,9 +4,9 @@ use crate::http::server::{accept_connections, Handler, HttpSettings};
 use crate::{Fail, Result};
 
 use rustls::server::ServerConfig;
-use rustls::{Certificate, PrivateKey};
-use rustls_pemfile::Item::{PKCS8Key, RSAKey};
+use rustls_pemfile::Item::{Pkcs1Key, Pkcs8Key, Sec1Key};
 use rustls_pemfile::{certs, read_one};
+use rustls_pki_types::{CertificateDer, PrivateKeyDer};
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::BufReader;
@@ -53,25 +53,23 @@ pub fn listen<T: Send + Sync + 'static>(
 /// Generate config with TLS certificate and private key
 pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfig> {
     // create config
-    let config = ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth();
+    let config = ServerConfig::builder().with_no_client_auth();
 
     // open certificate
     let mut cert_buf = BufReader::new(raw_cert);
     let cert = certs(&mut cert_buf)
-        .or_else(|_| Fail::from("broken certificate"))?
-        .iter()
-        .map(|v| Certificate(v.clone()))
-        .collect();
+        .map(|v| v.or_else(|_| Fail::from("broken certificate")))
+        .collect::<Result<Vec<CertificateDer>>>()?;
 
     // open private key
     let mut key_buf = BufReader::new(raw_key);
-    let key = match read_one(&mut key_buf).or_else(|_| Fail::from("broken private key"))? {
-        Some(RSAKey(key)) => PrivateKey(key),
-        Some(PKCS8Key(key)) => PrivateKey(key),
-        _ => return Fail::from("broken private key"),
-    };
+    let key: PrivateKeyDer =
+        match read_one(&mut key_buf).or_else(|_| Fail::from("broken private key"))? {
+            Some(Pkcs1Key(key)) => key.into(),
+            Some(Pkcs8Key(key)) => key.into(),
+            Some(Sec1Key(key)) => key.into(),
+            _ => return Fail::from("broken private key"),
+        };
 
     // return config with certificate
     config.with_single_cert(cert, key).or_else(Fail::from)
