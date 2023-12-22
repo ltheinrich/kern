@@ -183,6 +183,12 @@ impl<'a> HttpRequest<'a> {
         let get = parse_parameters(get_raw, |v| v)?;
         let post = parse_post(&headers, &body).unwrap_or_default();
 
+        // ip: x-real-ip if socket ip is loopback else socket ip
+        let ip = match headers.get("x-real-ip") {
+            Some(x_real_ip) if address.ip().is_loopback() => x_real_ip.to_string(),
+            _ => address.ip().to_string(),
+        };
+
         // return request
         Ok(Self {
             method,
@@ -191,7 +197,7 @@ impl<'a> HttpRequest<'a> {
             get,
             post,
             body,
-            ip: address.ip().to_string(),
+            ip,
         })
     }
 }
