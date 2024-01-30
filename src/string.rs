@@ -6,12 +6,7 @@
 ///
 /// Returns false for other characters
 pub fn is_alphanumeric_char(c: char) -> bool {
-    match c {
-        'a'..='z' => true,
-        'A'..='Z' => true,
-        '0'..='9' => true,
-        _ => false,
-    }
+    matches!(c, 'a'..='z' | 'A'..='Z' | '0'..='9')
 }
 
 /// Check if string is alphanumeric (latin)
