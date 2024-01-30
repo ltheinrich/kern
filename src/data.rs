@@ -105,7 +105,8 @@ pub fn write_file(file: &mut File, data: impl AsRef<[u8]>) -> Result<()> {
     file.rewind()?;
 
     // write data
-    file.write_all(data.as_ref()).or_else(Fail::from)
+    file.write_all(data.as_ref())?;
+    file.flush().or_else(Fail::from)
 }
 
 /// Parse storage file buf to map
