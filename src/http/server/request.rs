@@ -278,7 +278,7 @@ fn parse_post_upload(body: &[u8], boundary: &str) -> Result<HashMap<String, Vec<
             .ok_or_else(|| Fail::new("broken section in post body"))?;
         let data_lines = splitn(2, data_section, b"\r\n");
         let next_data_line = data_lines
-            .get(0)
+            .first()
             .ok_or_else(|| Fail::new("broken section in post body"))?;
         let value = if let Some(file_data_line) = data_lines.get(1) {
             if next_data_line.is_empty() {
