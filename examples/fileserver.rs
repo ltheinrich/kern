@@ -1,7 +1,7 @@
 extern crate kern;
 
 use kern::http::name;
-use kern::http::server::{respond, HttpSettings, ResponseData};
+use kern::http::server::{load_certificate, respond, HttpSettings, ResponseData};
 use kern::http::server::{HttpRequest, HttpServerBuilder};
 use kern::meta::version;
 use kern::{Error, Fail, Result};
@@ -10,11 +10,13 @@ use std::io::prelude::Read;
 use std::sync::{Arc, RwLock};
 
 fn main() {
+    let tls_config = load_certificate("examples/cert.pem", "examples/key.pem").unwrap();
     let settings = HttpSettings::new();
     let server = HttpServerBuilder::new()
-        .addr("[::]:8080")
+        .addr("[::]:8443")
         .threads(4)
         .settings(settings)
+        .tls_on(tls_config)
         .handler(handler)
         .error_handler(error_handler)
         .build(Arc::new(RwLock::new(0u32)))
