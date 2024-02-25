@@ -11,18 +11,21 @@ use std::io::prelude::*;
 use std::io::BufReader;
 
 /// Generate config with TLS certificate and private key
-pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfig> {
+pub fn certificate_config(
+    raw_cert: impl AsRef<[u8]>,
+    raw_key: impl AsRef<[u8]>,
+) -> Result<ServerConfig> {
     // create config
     let config = ServerConfig::builder().with_no_client_auth();
 
     // open certificate
-    let mut cert_buf = BufReader::new(raw_cert);
+    let mut cert_buf = BufReader::new(raw_cert.as_ref());
     let cert = certs(&mut cert_buf)
         .map(|v| v.or_else(|_| Fail::from("broken certificate")))
         .collect::<Result<Vec<CertificateDer>>>()?;
 
     // open private key
-    let mut key_buf = BufReader::new(raw_key);
+    let mut key_buf = BufReader::new(raw_key.as_ref());
     let key: PrivateKeyDer =
         match read_one(&mut key_buf).or_else(|_| Fail::from("broken private key"))? {
             Some(Pkcs1Key(key)) => key.into(),
@@ -36,10 +39,13 @@ pub fn certificate_config(raw_cert: &[u8], raw_key: &[u8]) -> Result<ServerConfi
 }
 
 /// Generate config with TLS certificate and private key from file
-pub fn load_certificate(cert_path: &str, key_path: &str) -> Result<ServerConfig> {
+pub fn load_certificate(
+    cert_path: impl AsRef<str>,
+    key_path: impl AsRef<str>,
+) -> Result<ServerConfig> {
     // open files
-    let mut cert_file = File::open(cert_path)?;
-    let mut key_file = File::open(key_path)?;
+    let mut cert_file = File::open(cert_path.as_ref())?;
+    let mut key_file = File::open(key_path.as_ref())?;
 
     // create buffers
     let mut cert_buf = Vec::new();
