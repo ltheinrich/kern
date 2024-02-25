@@ -1,7 +1,8 @@
 //! Lightweight HTTP library
 
-#[cfg(feature = "http")]
 pub mod server;
+
+use std::io::{Read, Write};
 
 use crate::meta::{init_name, init_version, name as get_name, version as get_version};
 
@@ -22,5 +23,9 @@ pub fn name() -> &'static str {
         name => name,
     }
 }
+
+pub trait ReadWrite: Read + Write {}
+
+impl<T: Read + Write> ReadWrite for T {}
 
 // TODO add tests

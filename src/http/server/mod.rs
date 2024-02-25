@@ -1,54 +1,28 @@
 //! HTTP server
 
-mod conn;
-mod listener;
+mod builder;
 mod request;
 mod response;
-pub mod unsecure;
+#[allow(clippy::module_inception)]
+mod server;
+mod settings;
+#[cfg(feature = "tls")]
+mod tls;
 
-pub use conn::*;
-pub use listener::*;
+pub use builder::*;
 pub use request::*;
 pub use response::*;
+pub use server::*;
+pub use settings::*;
+#[cfg(feature = "tls")]
+pub use tls::*;
 
-use crate::Result;
+use crate::{Error, Result};
 
-use rustls::{ServerConnection, Stream as RustlsStream};
-use std::net::TcpStream;
 use std::sync::{Arc, RwLock};
-use std::time::Duration;
-
-/// TLS stream
-pub type Stream<'a> = RustlsStream<'a, ServerConnection, TcpStream>;
 
 /// Handler function
-pub type Handler<T> = fn(Result<HttpRequest>, Arc<RwLock<T>>) -> Result<Vec<u8>>;
+pub type Handler<S> = fn(HttpRequest, Arc<RwLock<S>>) -> Result<Vec<u8>>;
 
-/// HTTP server settings
-#[derive(Clone, Debug, Default)]
-pub struct HttpSettings {
-    pub max_header_size: usize,
-    pub max_body_size: usize,
-    pub header_buffer: usize,
-    pub body_buffer: usize,
-    pub header_read_attempts: usize,
-    pub body_read_attempts: usize,
-    pub read_timeout: Option<Duration>,
-    pub write_timeout: Option<Duration>,
-}
-
-impl HttpSettings {
-    /// Create new HttpSettings with default values
-    pub fn new() -> Self {
-        Self {
-            max_header_size: 8192,
-            max_body_size: 10_485_760,
-            header_buffer: 8192,
-            body_buffer: 8192,
-            header_read_attempts: 3,
-            body_read_attempts: 3,
-            read_timeout: Some(Duration::from_secs(10)),
-            write_timeout: Some(Duration::from_secs(10)),
-        }
-    }
-}
+/// ErrorHandler function
+pub type ErrorHandler<S> = fn(Error, Arc<RwLock<S>>) -> Vec<u8>;

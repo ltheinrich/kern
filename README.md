@@ -13,8 +13,8 @@ Add to Cargo.toml
 kern = "1"
 ```
 
-## kern::http (feature)
+## kern::http (with tls feature)
 ```
 [dependencies]
-kern = { version = "1", features = ["http"] }
+kern = { version = "1", features = ["tls"] }
 ```

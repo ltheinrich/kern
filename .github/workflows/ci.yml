@@ -20,11 +20,17 @@ jobs:
       - name: Format
         run: cargo fmt --all --verbose -- --check
 
-      - name: Lint
+      - name: Lint all features
         run: cargo clippy --workspace --all-features --verbose -- -D warnings
 
-      - name: Test
+      - name: Lint no features
+        run: cargo clippy --workspace --no-default-features --verbose -- -D warnings
+
+      - name: Test all features
         run: cargo test --workspace --all-features --verbose
+
+      - name: Test no features
+        run: cargo test --workspace --no-default-features --verbose
 
   build:
     runs-on: ubuntu-latest
@@ -41,5 +47,8 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Build
+      - name: Build all features
         run: cargo build --workspace --all-features --verbose
+
+      - name: Build no features
+        run: cargo build --workspace --no-default-features --verbose

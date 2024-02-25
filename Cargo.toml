@@ -16,8 +16,11 @@ rustls-pki-types = { version = "1.2.0", optional = true }
 
 [features]
 default = []
-http = ["rustls", "rustls-pemfile", "rustls-pki-types"]
+tls = ["rustls", "rustls-pemfile", "rustls-pki-types"]
 
 [[example]]
 name = "fileserver"
-required-features = ["http"]
+
+[[example]]
+name = "fileserver_tls"
+required-features = ["tls"]

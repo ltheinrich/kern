@@ -1,10 +1,10 @@
 //! HTTP request parsing
 
 use crate::byte::{split, splitn};
-use crate::http::server::{HttpSettings, Stream};
+use crate::http::server::HttpSettings;
+use crate::http::ReadWrite;
 use crate::{Fail, Result};
 
-use std::io::prelude::Read;
 use std::{collections::HashMap, net::SocketAddr};
 
 /// HTTP request method (GET or POST)
@@ -12,6 +12,12 @@ use std::{collections::HashMap, net::SocketAddr};
 pub enum HttpMethod {
     Get,
     Post,
+    Put,
+    Delete,
+    Head,
+    Connect,
+    Options,
+    Trace,
 }
 
 /// HTTP request structure
@@ -22,8 +28,8 @@ pub struct HttpRequest<'a> {
     headers: HashMap<String, &'a str>,
     get: HashMap<String, &'a str>,
     post: HashMap<String, Vec<u8>>,
-    body: Vec<u8>,
     ip: String,
+    body: Vec<u8>,
 }
 
 impl<'a> HttpRequest<'a> {
@@ -85,10 +91,10 @@ impl<'a> HttpRequest<'a> {
     /// Parse HTTP request
     pub fn from(
         raw_header: &'a str,
-        mut raw_body: Vec<u8>,
-        stream: &mut Stream,
+        mut partial_body: Vec<u8>,
+        stream: &mut impl ReadWrite,
         address: SocketAddr,
-        http_settings: &HttpSettings,
+        settings: &HttpSettings,
     ) -> Result<Self> {
         // split header
         let mut header = raw_header.lines();
@@ -98,15 +104,20 @@ impl<'a> HttpRequest<'a> {
             .split(' ');
 
         // parse method
-        let method = if reqln
+        let method = match reqln
             .next()
             .ok_or_else(|| Fail::new("No method in header"))?
-            == "POST"
         {
-            HttpMethod::Post
-        } else {
-            HttpMethod::Get
-        };
+            "GET" => Ok(HttpMethod::Get),
+            "POST" => Ok(HttpMethod::Post),
+            "PUT" => Ok(HttpMethod::Put),
+            "DELETE" => Ok(HttpMethod::Delete),
+            "HEAD" => Ok(HttpMethod::Head),
+            "CONNECT" => Ok(HttpMethod::Connect),
+            "OPTIONS" => Ok(HttpMethod::Options),
+            "TRACE" => Ok(HttpMethod::Trace),
+            _ => Fail::from("Invalid method in header"),
+        }?;
 
         // parse url and split raw get parameters
         let mut get_raw = "";
@@ -140,7 +151,6 @@ impl<'a> HttpRequest<'a> {
         };
 
         // read rest of body
-        let mut body = Vec::new();
         if let Some(buf_len) = buf_len {
             // parse buffer length
             let con_len = buf_len
@@ -149,39 +159,37 @@ impl<'a> HttpRequest<'a> {
                 .ok_or_else(|| Fail::new("Content-Length is not of type usize"))?;
 
             // check if body size is ok.
-            if con_len > http_settings.max_body_size {
+            if con_len > settings.max_body_size {
                 return Fail::from("Max body size exceeded");
             }
 
             // read body
             let mut read_fails = 0;
-            while raw_body.len() < con_len {
+            while partial_body.len() < con_len {
                 // read next buffer
-                let mut rest_body = vec![0u8; http_settings.body_buffer];
+                let mut rest_body = vec![0u8; settings.body_buffer];
                 let length = stream
                     .read(&mut rest_body)
                     .ok()
                     .ok_or_else(|| Fail::new("Stream broken"))?;
                 rest_body.truncate(length);
-                raw_body.append(&mut rest_body);
+                partial_body.append(&mut rest_body);
 
                 // check if didn't read fully
-                if length < http_settings.body_buffer {
+                if length < settings.body_buffer {
                     read_fails += 1;
 
                     // failed too often
-                    if read_fails > http_settings.body_read_attempts {
+                    if read_fails > settings.body_read_attempts {
                         return Fail::from("Read body failed too often");
                     }
                 }
             }
-
-            body = raw_body;
         }
 
         // parse GET and POST parameters
         let get = parse_parameters(get_raw, |v| v)?;
-        let post = parse_post(&headers, &body).unwrap_or_default();
+        let post = parse_post(&headers, &partial_body).unwrap_or_default();
 
         // ip: x-real-ip if socket ip is loopback else socket ip
         let ip = match headers.get("x-real-ip") {
@@ -189,15 +197,14 @@ impl<'a> HttpRequest<'a> {
             _ => address.ip().to_string(),
         };
 
-        // return request
         Ok(Self {
             method,
             url,
             headers,
             get,
             post,
-            body,
             ip,
+            body: partial_body,
         })
     }
 }
