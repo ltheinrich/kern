@@ -5,22 +5,22 @@ use std::convert::AsRef;
 
 /// Additional response data
 #[derive(Clone, Debug)]
-pub struct ResponseData {
-    pub status: String,
-    pub headers: HashMap<String, String>,
+pub struct ResponseData<'a> {
+    pub status: &'a str,
+    pub headers: HashMap<&'a str, &'a str>,
 }
 
-impl Default for ResponseData {
+impl<'a> Default for ResponseData<'a> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl ResponseData {
+impl<'a> ResponseData<'a> {
     /// Create new with default values
     pub fn new() -> Self {
         Self {
-            status: "200 OK".to_string(),
+            status: "200 OK",
             headers: HashMap::new(),
         }
     }
@@ -31,14 +31,14 @@ impl ResponseData {
     }
 
     /// Change status
-    pub fn status(mut self, status: impl ToString) -> Self {
-        self.status = status.to_string();
+    pub fn status(mut self, status: &'a str) -> Self {
+        self.status = status;
         self
     }
 
     /// Add header
-    pub fn header(mut self, key: impl ToString, value: impl ToString) -> Self {
-        self.headers.insert(key.to_string(), value.to_string());
+    pub fn header(mut self, key: &'a str, value: &'a str) -> Self {
+        self.headers.insert(key, value);
         self
     }
 
