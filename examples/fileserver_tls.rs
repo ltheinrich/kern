@@ -16,7 +16,7 @@ fn main() {
         .addr("[::]:8443")
         .threads(4)
         .settings(settings)
-        .tls(tls_config)
+        .tls_on(tls_config)
         .handler(handler)
         .error_handler(error_handler)
         .build(Arc::new(RwLock::new(0u32)))

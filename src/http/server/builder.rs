@@ -60,17 +60,24 @@ impl<S: Send + Sync + 'static> HttpServerBuilder<S> {
     }
 
     #[cfg(feature = "tls")]
-    /// Set TLS configuration and enable TLS
-    pub fn tls(mut self, tls_config: ServerConfig) -> Self {
-        self.tls_config = Some(tls_config);
+    /// Set TLS configuration (Option)
+    /// TLS enabled when Some(ServerConfig)
+    /// TLS disabled when None
+    pub fn tls(mut self, tls_config: Option<ServerConfig>) -> Self {
+        self.tls_config = tls_config;
         self
     }
 
     #[cfg(feature = "tls")]
+    /// Set TLS configuration and enable TLS
+    pub fn tls_on(self, tls_config: ServerConfig) -> Self {
+        self.tls(Some(tls_config))
+    }
+
+    #[cfg(feature = "tls")]
     /// Remove TLS configuration and disable TLS
-    pub fn tls_off(mut self) -> Self {
-        self.tls_config = None;
-        self
+    pub fn tls_off(self) -> Self {
+        self.tls(None)
     }
 
     /// Set request handler

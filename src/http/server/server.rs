@@ -54,7 +54,7 @@ impl<S: Send + Sync + 'static> HttpServer<S> {
             server
                 .threads_mut()
                 .unwrap()
-                .push(spawn(move || accept(server_clone)));
+                .push(spawn(move || accept_all(server_clone)));
         });
         Ok(server)
     }
@@ -118,7 +118,7 @@ fn process_request<S: Send + Sync + 'static>(
 }
 
 /// Accept connections
-fn accept<S: Send + Sync + 'static>(server: Arc<HttpServer<S>>) {
+fn accept_all<S: Send + Sync + 'static>(server: Arc<HttpServer<S>>) {
     loop {
         // accept connection
         if let Ok((mut stream, address)) = server.listener.read().unwrap().accept() {
