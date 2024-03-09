@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 /// HTTP server settings
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug)]
 pub struct HttpSettings {
     pub max_header_size: usize,
     pub max_body_size: usize,
@@ -11,6 +11,12 @@ pub struct HttpSettings {
     pub body_read_attempts: usize,
     pub read_timeout: Option<Duration>,
     pub write_timeout: Option<Duration>,
+}
+
+impl Default for HttpSettings {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl HttpSettings {
