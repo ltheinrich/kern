@@ -7,7 +7,7 @@ use std::thread::{spawn, JoinHandle};
 #[cfg(feature = "tls")]
 use rustls::{ServerConfig, ServerConnection, Stream as RustlsStream};
 
-use crate::http::ReadWrite;
+use crate::http::common::ReadWrite;
 use crate::{Fail, Result};
 
 use super::{ErrorHandler, Handler, HttpRequest, HttpSettings};

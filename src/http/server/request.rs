@@ -1,24 +1,13 @@
 //! HTTP request parsing
 
 use crate::byte::{split, splitn};
+use crate::http::common::ReadWrite;
 use crate::http::server::HttpSettings;
-use crate::http::ReadWrite;
 use crate::{Fail, Result};
 
 use std::{collections::HashMap, net::SocketAddr};
 
-/// HTTP request method (GET or POST)
-#[derive(Debug, PartialEq, Eq)]
-pub enum HttpMethod {
-    Get,
-    Post,
-    Put,
-    Delete,
-    Head,
-    Connect,
-    Options,
-    Trace,
-}
+pub use crate::http::common::HttpMethod;
 
 /// HTTP request structure
 #[derive(Debug)]
@@ -104,20 +93,10 @@ impl<'a> HttpRequest<'a> {
             .split(' ');
 
         // parse method
-        let method = match reqln
+        let method: HttpMethod = reqln
             .next()
             .ok_or_else(|| Fail::new("No method in header"))?
-        {
-            "GET" => Ok(HttpMethod::Get),
-            "POST" => Ok(HttpMethod::Post),
-            "PUT" => Ok(HttpMethod::Put),
-            "DELETE" => Ok(HttpMethod::Delete),
-            "HEAD" => Ok(HttpMethod::Head),
-            "CONNECT" => Ok(HttpMethod::Connect),
-            "OPTIONS" => Ok(HttpMethod::Options),
-            "TRACE" => Ok(HttpMethod::Trace),
-            _ => Fail::from("Invalid method in header"),
-        }?;
+            .try_into()?;
 
         // parse url and split raw get parameters
         let mut get_raw = "";
