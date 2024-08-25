@@ -51,10 +51,10 @@ pub fn url_encode(url: impl AsRef<str>, skip_slash: bool) -> String {
             encoded.push(c);
         } else {
             c.encode_utf8(&mut bytes);
-            for i in 0..c.len_utf8() {
+            for byte in bytes.iter().take(c.len_utf8()) {
                 encoded.push('%');
-                encoded.push(to_hex(bytes[i] >> 4));
-                encoded.push(to_hex(bytes[i] & 15));
+                encoded.push(to_hex(byte >> 4));
+                encoded.push(to_hex(byte & 15));
             }
         }
     });
