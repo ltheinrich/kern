@@ -35,7 +35,7 @@ pub fn send_main_header(
     for (i, (name, value)) in query.iter().enumerate() {
         stream.write_all(&[if i == 0 { b'?' } else { b'&' }])?;
         stream.write_all(url_encode(name, false).as_bytes())?;
-        stream.write_all(&[b'='])?;
+        stream.write_all(b"=")?;
         stream.write_all(url_encode(value, false).as_bytes())?;
     }
 

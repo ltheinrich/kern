@@ -232,7 +232,7 @@ fn parse_post_upload(body: &[u8], boundary: &str) -> Result<HashMap<String, Vec<
     let mut params = HashMap::new();
 
     // split body into sections
-    let mut sections = split(&body, &format!("--{boundary}\r\n"));
+    let mut sections = split(&body, format!("--{boundary}\r\n"));
     sections.remove(0);
     for mut section in sections {
         // check if last section
