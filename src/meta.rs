@@ -15,7 +15,7 @@ pub fn name() -> &'static str {
 }
 
 /// Get version string from a Cargo.toml (unsafe, modifies VERSION)
-pub fn init_version(cargo_toml: &'static str) -> &str {
+pub fn init_version(cargo_toml: &'static str) -> &'static str {
     // modifiy VERSION and return
     unsafe {
         VERSION = search(cargo_toml, "version=").unwrap_or("0.0.0");
@@ -24,7 +24,7 @@ pub fn init_version(cargo_toml: &'static str) -> &str {
 }
 
 /// Get name string from a Cargo.toml (unsafe, modifies NAME)
-pub fn init_name(cargo_toml: &'static str) -> &str {
+pub fn init_name(cargo_toml: &'static str) -> &'static str {
     unsafe {
         NAME = search(cargo_toml, "name=").unwrap_or("kern");
     }

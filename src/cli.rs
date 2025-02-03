@@ -44,7 +44,7 @@ impl<'a> CliBuilder<'a> {
     }
 
     /// Create a new Command from raw command line arguments
-    pub fn build(self, raw: &'a [String]) -> Command {
+    pub fn build(self, raw: &'a [String]) -> Command<'a> {
         // define command nam
         let command = if raw.is_empty() { "" } else { &raw[0] };
 

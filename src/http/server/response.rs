@@ -10,7 +10,7 @@ pub struct ResponseData<'a> {
     pub headers: HashMap<&'a str, &'a str>,
 }
 
-impl<'a> Default for ResponseData<'a> {
+impl Default for ResponseData<'_> {
     fn default() -> Self {
         Self::new()
     }
