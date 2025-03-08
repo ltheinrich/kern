@@ -7,8 +7,8 @@ use rustls_pemfile::Item::{Pkcs1Key, Pkcs8Key, Sec1Key};
 use rustls_pemfile::{certs, read_one};
 use rustls_pki_types::{CertificateDer, PrivateKeyDer};
 use std::fs::File;
-use std::io::prelude::*;
 use std::io::BufReader;
+use std::io::prelude::*;
 
 /// Generate config with TLS certificate and private key
 pub fn certificate_config(

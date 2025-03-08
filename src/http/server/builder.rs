@@ -5,7 +5,7 @@ use rustls::ServerConfig;
 
 use crate::Result;
 
-use super::{respond, ErrorHandler, Handler, HttpServer, HttpSettings, ResponseData};
+use super::{ErrorHandler, Handler, HttpServer, HttpSettings, ResponseData, respond};
 
 /// Builder for HttpServer
 #[derive(Clone, Debug)]

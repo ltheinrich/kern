@@ -349,8 +349,10 @@ pub fn redirect(url: impl AsRef<str>) -> Vec<u8> {
 
     // create and return response
     respond(
-        format!("<html><head><title>Moved</title></head><body><h1>Moved</h1><p><a href=\"{url}\">{url}</a></p></body></html>"),
+        format!(
+            "<html><head><title>Moved</title></head><body><h1>Moved</h1><p><a href=\"{url}\">{url}</a></p></body></html>"
+        ),
         "text/html",
-        Some(data)
-        )
+        Some(data),
+    )
 }

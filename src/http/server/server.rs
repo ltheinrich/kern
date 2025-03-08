@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use std::net::{SocketAddr, TcpListener, TcpStream};
 use std::panic::catch_unwind;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
-use std::thread::{spawn, JoinHandle};
+use std::thread::{JoinHandle, spawn};
 
 #[cfg(feature = "tls")]
 use rustls::{ServerConfig, ServerConnection, Stream as RustlsStream};

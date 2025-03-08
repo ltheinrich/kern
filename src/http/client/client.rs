@@ -2,11 +2,11 @@ use core::str;
 use std::collections::HashMap;
 use std::io::Write;
 
-use crate::http::common::HttpMethod;
 use crate::Result;
+use crate::http::common::HttpMethod;
 
 use super::request::{connect, end_headers, send_content_length, send_header, send_main_header};
-use super::response::{read_all, HttpResponse};
+use super::response::{HttpResponse, read_all};
 
 #[cfg(feature = "tls")]
 use {

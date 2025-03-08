@@ -2,7 +2,7 @@
 
 use crate::{Fail, Result};
 use std::collections::HashMap;
-use std::fs::{remove_file, rename, File, OpenOptions};
+use std::fs::{File, OpenOptions, remove_file, rename};
 use std::io::prelude::*;
 
 /// Raw data storage file

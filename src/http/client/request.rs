@@ -6,7 +6,7 @@ use std::net::TcpStream;
 use crate::http::common::{HttpMethod, ReadWrite};
 use crate::{Fail, Result};
 
-use super::url::{url_encode, Url};
+use super::url::{Url, url_encode};
 
 #[cfg(feature = "tls")]
 use {

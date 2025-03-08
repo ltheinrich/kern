@@ -1,8 +1,8 @@
 extern crate kern;
 
 use kern::http::name;
-use kern::http::server::{load_certificate, respond, HttpSettings, ResponseData};
 use kern::http::server::{HttpRequest, HttpServerBuilder};
+use kern::http::server::{HttpSettings, ResponseData, load_certificate, respond};
 use kern::meta::version;
 use kern::{Error, Fail, Result};
 use rustls::ServerConfig;
