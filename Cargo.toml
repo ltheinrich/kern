@@ -2,7 +2,7 @@
 name = "kern"
 version = "1.7.1"
 authors = ["Lennart Heinrich <lennart@ltheinrich.de>"]
-edition = "2021"
+edition = "2024"
 license = "ISC"
 repository = "https://ltheinrich.de/kern"
 description = "General library for Rust"
