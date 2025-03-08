@@ -1,6 +1,4 @@
-use std::num::NonZeroUsize;
-use std::sync::{Arc, RwLock};
-use std::thread::available_parallelism;
+use std::sync::Arc;
 
 #[cfg(feature = "tls")]
 use rustls::ServerConfig;
@@ -11,31 +9,29 @@ use super::{respond, ErrorHandler, Handler, HttpServer, HttpSettings, ResponseDa
 
 /// Builder for HttpServer
 #[derive(Clone, Debug)]
-pub struct HttpServerBuilder<S: Send + Sync + 'static> {
+pub struct HttpServerBuilder {
     addr: String,
     settings: HttpSettings,
-    handler: Handler<S>,
-    error_handler: ErrorHandler<S>,
-    threads: usize,
+    handler: Handler,
+    error_handler: ErrorHandler,
     #[cfg(feature = "tls")]
-    tls_config: Option<ServerConfig>,
+    tls_config: Option<fn() -> Arc<ServerConfig>>,
 }
 
-impl<S: Send + Sync + 'static> Default for HttpServerBuilder<S> {
+impl Default for HttpServerBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<S: Send + Sync + 'static> HttpServerBuilder<S> {
+impl HttpServerBuilder {
     /// Create new HttpServerBuilder with defaults
     pub fn new() -> Self {
         Self {
             addr: "localhost:8080".to_string(),
-            threads: available_parallelism().unwrap_or(NonZeroUsize::MIN).get(),
             settings: HttpSettings::default(),
-            handler: |_, _| unimplemented!(),
-            error_handler: |err, _| {
+            handler: |_| unimplemented!(),
+            error_handler: |err| {
                 respond(
                     err.to_string(),
                     "text/plain",
@@ -63,14 +59,14 @@ impl<S: Send + Sync + 'static> HttpServerBuilder<S> {
     /// Set TLS configuration (Option)
     /// TLS enabled when Some(ServerConfig)
     /// TLS disabled when None
-    pub fn tls(mut self, tls_config: Option<ServerConfig>) -> Self {
+    pub fn tls(mut self, tls_config: Option<fn() -> Arc<ServerConfig>>) -> Self {
         self.tls_config = tls_config;
         self
     }
 
     #[cfg(feature = "tls")]
     /// Set TLS configuration and enable TLS
-    pub fn tls_on(self, tls_config: ServerConfig) -> Self {
+    pub fn tls_on(self, tls_config: fn() -> Arc<ServerConfig>) -> Self {
         self.tls(Some(tls_config))
     }
 
@@ -81,34 +77,26 @@ impl<S: Send + Sync + 'static> HttpServerBuilder<S> {
     }
 
     /// Set request handler
-    pub fn handler(mut self, handler: Handler<S>) -> Self {
+    pub fn handler(mut self, handler: Handler) -> Self {
         self.handler = handler;
         self
     }
 
     /// Set error handler
-    pub fn error_handler(mut self, error_handler: ErrorHandler<S>) -> Self {
+    pub fn error_handler(mut self, error_handler: ErrorHandler) -> Self {
         self.error_handler = error_handler;
         self
     }
 
-    /// Set thread count
-    pub fn threads(mut self, threads: usize) -> Self {
-        self.threads = threads;
-        self
-    }
-
     /// Build HttpServer
-    pub fn build(self, shared: Arc<RwLock<S>>) -> Result<Arc<HttpServer<S>>> {
+    pub fn build(self) -> Result<Arc<HttpServer>> {
         HttpServer::new(
             self.addr,
             Arc::new(self.settings),
             self.handler,
             self.error_handler,
-            shared,
-            self.threads,
             #[cfg(feature = "tls")]
-            self.tls_config.map(Arc::new),
+            self.tls_config,
         )
     }
 }

@@ -19,10 +19,8 @@ pub use tls::*;
 
 use crate::{Error, Result};
 
-use std::sync::{Arc, RwLock};
-
 /// Handler function
-pub type Handler<S> = fn(HttpRequest, Arc<RwLock<S>>) -> Result<Vec<u8>>;
+pub type Handler = fn(HttpRequest) -> Result<Vec<u8>>;
 
 /// ErrorHandler function
-pub type ErrorHandler<S> = fn(Error, Arc<RwLock<S>>) -> Vec<u8>;
+pub type ErrorHandler = fn(Error) -> Vec<u8>;

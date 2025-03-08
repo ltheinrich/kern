@@ -5,27 +5,29 @@ use kern::http::server::{load_certificate, respond, HttpSettings, ResponseData};
 use kern::http::server::{HttpRequest, HttpServerBuilder};
 use kern::meta::version;
 use kern::{Error, Fail, Result};
+use rustls::ServerConfig;
 use std::fs::File;
 use std::io::prelude::Read;
 use std::sync::{Arc, RwLock};
 
+static SHARED: RwLock<u32> = RwLock::new(0);
+
 fn main() {
-    let tls_config = load_certificate("examples/cert.pem", "examples/key.pem").unwrap();
-    let settings = HttpSettings::new();
+    //let tls_config = ;
+    let settings = HttpSettings::new().threads_num(4);
     let server = HttpServerBuilder::new()
         .addr("[::]:8443")
-        .threads(4)
         .settings(settings)
         .tls_on(tls_config)
         .handler(handler)
         .error_handler(error_handler)
-        .build(Arc::new(RwLock::new(0u32)))
+        .build()
         .unwrap();
     server.block().unwrap();
 }
 
-fn handler(req: HttpRequest, shared: Arc<RwLock<u32>>) -> Result<Vec<u8>> {
-    let mut num = shared.write().unwrap();
+fn handler(req: HttpRequest) -> Result<Vec<u8>> {
+    let mut num = SHARED.write().unwrap();
     *num += 1;
     dbg!(*num);
     println!("New request from IP: {}", req.ip());
@@ -39,7 +41,7 @@ fn handler(req: HttpRequest, shared: Arc<RwLock<u32>>) -> Result<Vec<u8>> {
     Ok(respond(buf, "text/html", None))
 }
 
-fn error_handler(err: Error, _: Arc<RwLock<u32>>) -> Vec<u8> {
+fn error_handler(err: Error) -> Vec<u8> {
     let msg = format!(
         "<!DOCTYPE html><html><head><title>{0}</title></head><body><h3>Fileserver error</h3><p>{0}</p><hr><address>{1} v{2}</address></body></html>",
         err,
@@ -51,4 +53,8 @@ fn error_handler(err: Error, _: Arc<RwLock<u32>>) -> Vec<u8> {
         "text/html",
         ResponseData::bad_request().build(),
     )
+}
+
+fn tls_config() -> Arc<ServerConfig> {
+    Arc::new(load_certificate("examples/cert.pem", "examples/key.pem").unwrap())
 }

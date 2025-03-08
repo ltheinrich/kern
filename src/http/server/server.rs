@@ -1,6 +1,7 @@
 #[cfg(not(feature = "tls"))]
 use std::io::prelude::*;
-use std::net::{SocketAddr, TcpListener};
+use std::net::{SocketAddr, TcpListener, TcpStream};
+use std::panic::catch_unwind;
 use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::thread::{spawn, JoinHandle};
 
@@ -14,27 +15,24 @@ use super::{ErrorHandler, Handler, HttpRequest, HttpSettings};
 
 /// Processes incoming HTTP connections
 #[derive(Debug)]
-pub struct HttpServer<S: Send + Sync + 'static> {
+pub struct HttpServer {
     listener: Arc<RwLock<TcpListener>>,
     settings: Arc<HttpSettings>,
-    handler: Handler<S>,
-    error_handler: ErrorHandler<S>,
-    shared: Arc<RwLock<S>>,
+    handler: Handler,
+    error_handler: ErrorHandler,
     threads: RwLock<Vec<JoinHandle<()>>>,
     #[cfg(feature = "tls")]
-    tls_config: Option<Arc<ServerConfig>>,
+    tls_config: Option<fn() -> Arc<ServerConfig>>,
 }
 
-impl<S: Send + Sync + 'static> HttpServer<S> {
+impl HttpServer {
     /// Create new HttpServer and listen
     pub fn new(
         addr: String,
         settings: Arc<HttpSettings>,
-        handler: Handler<S>,
-        error_handler: ErrorHandler<S>,
-        shared: Arc<RwLock<S>>,
-        threads: usize,
-        #[cfg(feature = "tls")] tls_config: Option<Arc<ServerConfig>>,
+        handler: Handler,
+        error_handler: ErrorHandler,
+        #[cfg(feature = "tls")] tls_config: Option<fn() -> Arc<ServerConfig>>,
     ) -> Result<Arc<Self>> {
         let listener = TcpListener::bind(addr)?;
         let server = Self {
@@ -42,19 +40,30 @@ impl<S: Send + Sync + 'static> HttpServer<S> {
             settings,
             handler,
             error_handler,
-            shared,
             threads: RwLock::default(),
             #[cfg(feature = "tls")]
             tls_config,
         };
         let server = Arc::new(server);
 
+        use super::HttpThreads::{CONSTANT, SPAWN};
+        let (no_catch, threads) = match server.settings.threads {
+            SPAWN(threads) => (true, threads),
+            CONSTANT(threads) => (false, threads),
+        };
+
         (0..threads).for_each(|_| {
             let server_clone = server.clone();
-            server
-                .threads_mut()
-                .unwrap()
-                .push(spawn(move || accept_all(server_clone)));
+            server.threads_mut().unwrap().push(spawn(move || {
+                if no_catch {
+                    accept_all(server_clone);
+                } else {
+                    loop {
+                        catch_unwind(|| accept_all(server_clone.clone())).ok();
+                        eprintln!("HTTP thread panicked, restarting...");
+                    }
+                }
+            }));
         });
         Ok(server)
     }
@@ -65,22 +74,9 @@ impl<S: Send + Sync + 'static> HttpServer<S> {
     }
 
     #[cfg(feature = "tls")]
-    /// Get TLS configuration
-    pub fn tls_config(&self) -> Option<&ServerConfig> {
-        match &self.tls_config {
-            Some(tls_config) => Some(tls_config),
-            None => None,
-        }
-    }
-
-    /// Read access to shared
-    pub fn shared(&self) -> Result<RwLockReadGuard<S>> {
-        self.shared.read().or_else(Fail::from)
-    }
-
-    /// Write access to shared
-    pub fn shared_mut(&self) -> Result<RwLockWriteGuard<S>> {
-        self.shared.write().or_else(Fail::from)
+    /// Get a new TLS configuration
+    pub fn tls_config(&self) -> Option<Arc<ServerConfig>> {
+        self.tls_config.map(|f| f())
     }
 
     /// Read access to threads
@@ -105,68 +101,92 @@ impl<S: Send + Sync + 'static> HttpServer<S> {
 }
 
 /// Reads header and create HttpRequest to pass to Handler
-fn process_request<S: Send + Sync + 'static>(
+fn process_request(
     stream: &mut impl ReadWrite,
     address: SocketAddr,
     settings: &HttpSettings,
-    shared: Arc<RwLock<S>>,
-    handler: Handler<S>,
+    handler: Handler,
 ) -> Result<Vec<u8>> {
     let (raw_header, partial_body) = read_header(stream, settings)?;
     let request = HttpRequest::from(&raw_header, partial_body, stream, address, settings)?;
-    handler(request, shared)
+    handler(request)
 }
 
 /// Accept connections
-fn accept_all<S: Send + Sync + 'static>(server: Arc<HttpServer<S>>) {
+fn accept_all(server: Arc<HttpServer>) {
+    #[cfg(feature = "tls")]
+    let tls_config = server.tls_config();
+
     loop {
         // accept connection
-        if let Ok((mut stream, address)) = server.listener.read().unwrap().accept() {
+        if let Ok((stream, address)) = server.listener.read().unwrap().accept() {
             // clones
             let server = server.clone();
+            #[cfg(feature = "tls")]
+            let tls_config = tls_config.clone();
 
             // spawn new thread
-            spawn(move || {
-                // set timeouts
-                stream
-                    .set_read_timeout(server.settings.read_timeout)
-                    .unwrap();
-                stream
-                    .set_write_timeout(server.settings.write_timeout)
-                    .unwrap();
-
-                // create TLS connection
-                #[cfg(feature = "tls")]
-                let mut session;
-                #[cfg(feature = "tls")]
-                let mut stream: Box<dyn ReadWrite> = match server.tls_config.clone() {
-                    Some(tls_config) => {
-                        session = ServerConnection::new(tls_config)
-                            .or_else(|_| Fail::from("could not initialize server connection"))
-                            .unwrap();
-                        Box::new(RustlsStream::new(&mut session, &mut stream))
-                    }
-                    None => Box::new(stream),
-                };
-
-                // process request
-                let response = match process_request(
-                    &mut stream,
-                    address,
-                    &server.settings,
-                    server.shared.clone(),
-                    server.handler,
-                ) {
-                    Ok(response) => response,
-                    Err(err) => (server.error_handler)(err, server.shared.clone()),
-                };
-
-                // respond
-                stream.write_all(&response).unwrap();
-                stream.flush().unwrap();
-            });
+            use super::HttpThreads::{CONSTANT, SPAWN};
+            match server.settings.threads {
+                SPAWN(_) => {
+                    spawn(move || {
+                        accepted(
+                            &server,
+                            stream,
+                            address,
+                            #[cfg(feature = "tls")]
+                            tls_config.clone(),
+                        )
+                        .ok();
+                    });
+                }
+                CONSTANT(_) => {
+                    accepted(
+                        &server,
+                        stream,
+                        address,
+                        #[cfg(feature = "tls")]
+                        tls_config.clone(),
+                    )
+                    .ok();
+                }
+            };
         }
     }
+}
+
+fn accepted(
+    server: &HttpServer,
+    mut stream: TcpStream,
+    address: SocketAddr,
+    #[cfg(feature = "tls")] tls_config: Option<Arc<ServerConfig>>,
+) -> Result<()> {
+    // set timeouts
+    stream.set_read_timeout(server.settings.read_timeout)?;
+    stream.set_write_timeout(server.settings.write_timeout)?;
+
+    // create TLS connection
+    #[cfg(feature = "tls")]
+    let mut session;
+    #[cfg(feature = "tls")]
+    let mut stream: Box<dyn ReadWrite> = match tls_config.clone() {
+        Some(tls_config) => {
+            session = ServerConnection::new(tls_config)
+                .or_else(|_| Fail::from("could not initialize server connection"))?;
+            Box::new(RustlsStream::new(&mut session, &mut stream))
+        }
+        None => Box::new(stream),
+    };
+
+    // process request
+    let response = match process_request(&mut stream, address, server.settings(), server.handler) {
+        Ok(response) => response,
+        Err(err) => (server.error_handler)(err),
+    };
+
+    // respond
+    stream.write_all(&response)?;
+    stream.flush().or_else(Fail::from)
 }
 
 /// Read until \r\n\r\n
