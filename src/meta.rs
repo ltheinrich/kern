@@ -1,34 +1,34 @@
+use std::sync::RwLock;
+
 /// Version string
-static mut VERSION: &str = "";
+static VERSION: RwLock<&str> = RwLock::new("");
 
 // Name string
-static mut NAME: &str = "";
+static NAME: RwLock<&str> = RwLock::new("");
 
-/// Get version (unsafe, but should be safe unless VERSION is being modified)
+/// Get version
 pub fn version() -> &'static str {
-    unsafe { VERSION }
+    *VERSION.read().unwrap()
 }
 
-/// Get name (unsafe, but should be safe unless NAME is being modified)
+/// Get name
 pub fn name() -> &'static str {
-    unsafe { NAME }
+    *NAME.read().unwrap()
 }
 
-/// Get version string from a Cargo.toml (unsafe, modifies VERSION)
+/// Get version string from a Cargo.toml
 pub fn init_version(cargo_toml: &'static str) -> &'static str {
     // modifiy VERSION and return
-    unsafe {
-        VERSION = search(cargo_toml, "version=").unwrap_or("0.0.0");
-    }
-    version()
+    let version = search(cargo_toml, "version=").unwrap_or("0.0.0");
+    *VERSION.write().unwrap() = version;
+    version
 }
 
-/// Get name string from a Cargo.toml (unsafe, modifies NAME)
+/// Get name string from a Cargo.toml
 pub fn init_name(cargo_toml: &'static str) -> &'static str {
-    unsafe {
-        NAME = search(cargo_toml, "name=").unwrap_or("kern");
-    }
-    name()
+    let name = search(cargo_toml, "name=").unwrap_or("kern");
+    *NAME.write().unwrap() = name;
+    name
 }
 
 /// Search value of key (key must end with =) in cargo_toml
