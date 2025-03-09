@@ -6,7 +6,10 @@ use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use std::thread::{JoinHandle, spawn};
 
 #[cfg(feature = "tls")]
-use rustls::{ServerConfig, ServerConnection, Stream as RustlsStream};
+use {
+    super::{TlsConfig, TlsConfigProvider},
+    rustls::{ServerConnection, Stream as RustlsStream},
+};
 
 use crate::http::common::ReadWrite;
 use crate::{Fail, Result};
@@ -22,7 +25,7 @@ pub struct HttpServer {
     error_handler: ErrorHandler,
     threads: RwLock<Vec<JoinHandle<()>>>,
     #[cfg(feature = "tls")]
-    tls_config: Option<fn() -> Arc<ServerConfig>>,
+    tls_config: Option<TlsConfigProvider>,
 }
 
 impl HttpServer {
@@ -32,7 +35,7 @@ impl HttpServer {
         settings: Arc<HttpSettings>,
         handler: Handler,
         error_handler: ErrorHandler,
-        #[cfg(feature = "tls")] tls_config: Option<fn() -> Arc<ServerConfig>>,
+        #[cfg(feature = "tls")] tls_config: Option<TlsConfigProvider>,
     ) -> Result<Arc<Self>> {
         let listener = TcpListener::bind(addr)?;
         let server = Self {
@@ -75,7 +78,7 @@ impl HttpServer {
 
     #[cfg(feature = "tls")]
     /// Get a new TLS configuration
-    pub fn tls_config(&self) -> Option<Arc<ServerConfig>> {
+    pub fn tls_config(&self) -> Option<TlsConfig> {
         self.tls_config.map(|f| f())
     }
 
@@ -159,7 +162,7 @@ fn accepted(
     server: &HttpServer,
     mut stream: TcpStream,
     address: SocketAddr,
-    #[cfg(feature = "tls")] tls_config: Option<Arc<ServerConfig>>,
+    #[cfg(feature = "tls")] tls_config: Option<TlsConfig>,
 ) -> Result<()> {
     // set timeouts
     stream.set_read_timeout(server.settings.read_timeout)?;

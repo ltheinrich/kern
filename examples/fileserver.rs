@@ -1,19 +1,18 @@
 extern crate kern;
 
 use kern::http::name;
-use kern::http::server::{HttpRequest, HttpServerBuilder};
-use kern::http::server::{HttpSettings, ResponseData, load_certificate, respond};
+use kern::http::server::{HttpRequest, HttpServerBuilder, load_certificate_provider};
+use kern::http::server::{HttpSettings, ResponseData, respond};
 use kern::meta::version;
 use kern::{Error, Fail, Result};
-use rustls::ServerConfig;
 use std::fs::File;
 use std::io::prelude::Read;
-use std::sync::{Arc, RwLock};
+use std::sync::RwLock;
 
 static SHARED: RwLock<u32> = RwLock::new(0);
 
 fn main() {
-    //let tls_config = ;
+    let tls_config = load_certificate_provider("examples/cert.pem", "examples/key.pem").unwrap();
     let settings = HttpSettings::new().threads_num(4);
     let server = HttpServerBuilder::new()
         .addr("[::]:8443")
@@ -53,8 +52,4 @@ fn error_handler(err: Error) -> Vec<u8> {
         "text/html",
         ResponseData::bad_request().build(),
     )
-}
-
-fn tls_config() -> Arc<ServerConfig> {
-    Arc::new(load_certificate("examples/cert.pem", "examples/key.pem").unwrap())
 }

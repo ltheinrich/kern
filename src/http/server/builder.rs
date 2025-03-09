@@ -1,11 +1,11 @@
 use std::sync::Arc;
 
-#[cfg(feature = "tls")]
-use rustls::ServerConfig;
-
 use crate::Result;
 
 use super::{ErrorHandler, Handler, HttpServer, HttpSettings, ResponseData, respond};
+
+#[cfg(feature = "tls")]
+use super::TlsConfigProvider;
 
 /// Builder for HttpServer
 #[derive(Clone, Debug)]
@@ -15,7 +15,7 @@ pub struct HttpServerBuilder {
     handler: Handler,
     error_handler: ErrorHandler,
     #[cfg(feature = "tls")]
-    tls_config: Option<fn() -> Arc<ServerConfig>>,
+    tls_config: Option<TlsConfigProvider>,
 }
 
 impl Default for HttpServerBuilder {
@@ -59,14 +59,14 @@ impl HttpServerBuilder {
     /// Set TLS configuration (Option)
     /// TLS enabled when Some(ServerConfig)
     /// TLS disabled when None
-    pub fn tls(mut self, tls_config: Option<fn() -> Arc<ServerConfig>>) -> Self {
+    pub fn tls(mut self, tls_config: Option<TlsConfigProvider>) -> Self {
         self.tls_config = tls_config;
         self
     }
 
     #[cfg(feature = "tls")]
     /// Set TLS configuration and enable TLS
-    pub fn tls_on(self, tls_config: fn() -> Arc<ServerConfig>) -> Self {
+    pub fn tls_on(self, tls_config: TlsConfigProvider) -> Self {
         self.tls(Some(tls_config))
     }
 

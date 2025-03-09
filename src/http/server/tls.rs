@@ -9,12 +9,49 @@ use rustls_pki_types::{CertificateDer, PrivateKeyDer};
 use std::fs::File;
 use std::io::BufReader;
 use std::io::prelude::*;
+use std::sync::{Arc, OnceLock};
+
+pub type TlsConfig = Arc<ServerConfig>;
+pub type TlsConfigProvider = fn() -> TlsConfig;
+
+static TLS_CONFIG_LC: OnceLock<TlsConfig> = OnceLock::new();
+static TLS_CONFIG_CC: OnceLock<TlsConfig> = OnceLock::new();
+
+/// Initializes and returns a single TlsConfigProvider (using load_certificate)<br>
+/// The first call sets the TlsConfig, any following call will only return the same provider as the first call!
+pub fn load_certificate_provider(
+    cert_path: impl AsRef<str>,
+    key_path: impl AsRef<str>,
+) -> Result<TlsConfigProvider> {
+    let tls_config = load_certificate(cert_path, key_path)?;
+    TLS_CONFIG_LC.get_or_init(|| tls_config);
+    Ok(provide_tls_config_lc)
+}
+
+/// Initializes and returns a single TlsConfigProvider (using certificate_config)<br>
+/// The first call sets the TlsConfig, any following call will only return the same provider as the first call!
+pub fn certificate_config_provider(
+    raw_cert: impl AsRef<[u8]>,
+    raw_key: impl AsRef<[u8]>,
+) -> Result<TlsConfigProvider> {
+    let tls_config = certificate_config(raw_cert, raw_key)?;
+    TLS_CONFIG_CC.get_or_init(|| tls_config);
+    Ok(provide_tls_config_cc)
+}
+
+fn provide_tls_config_lc() -> TlsConfig {
+    TLS_CONFIG_LC.get().unwrap().clone()
+}
+
+fn provide_tls_config_cc() -> TlsConfig {
+    TLS_CONFIG_CC.get().unwrap().clone()
+}
 
 /// Generate config with TLS certificate and private key
 pub fn certificate_config(
     raw_cert: impl AsRef<[u8]>,
     raw_key: impl AsRef<[u8]>,
-) -> Result<ServerConfig> {
+) -> Result<TlsConfig> {
     // create config
     let config = ServerConfig::builder().with_no_client_auth();
 
@@ -35,14 +72,17 @@ pub fn certificate_config(
         };
 
     // return config with certificate
-    config.with_single_cert(cert, key).or_else(Fail::from)
+    config
+        .with_single_cert(cert, key)
+        .map(Arc::new)
+        .or_else(Fail::from)
 }
 
 /// Generate config with TLS certificate and private key from file
 pub fn load_certificate(
     cert_path: impl AsRef<str>,
     key_path: impl AsRef<str>,
-) -> Result<ServerConfig> {
+) -> Result<TlsConfig> {
     // open files
     let mut cert_file = File::open(cert_path.as_ref())?;
     let mut key_file = File::open(key_path.as_ref())?;
