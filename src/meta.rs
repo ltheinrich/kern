@@ -47,7 +47,7 @@ pub fn search(cargo_toml: &'static str, key: &str) -> Option<&'static str> {
         // get cleaned/trimmed previous block
         let previous_block = blocks[i - 1]
             .split('\n')
-            .last()
+            .next_back()
             .unwrap_or(blocks[i - 1])
             .replace(' ', "");
 
