@@ -293,10 +293,7 @@ pub fn respond(
     let content = content.as_ref();
 
     // additional response data
-    let data = match data {
-        Some(data) => data,
-        None => ResponseData::new(),
-    };
+    let data = data.unwrap_or_default();
     let status = data.status;
     let mut headers = String::new();
     data.headers.iter().for_each(|(k, v)| {
