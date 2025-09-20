@@ -83,12 +83,12 @@ impl HttpServer {
     }
 
     /// Read access to threads
-    pub fn threads(&self) -> Result<RwLockReadGuard<Vec<JoinHandle<()>>>> {
+    pub fn threads(&self) -> Result<RwLockReadGuard<'_, Vec<JoinHandle<()>>>> {
         self.threads.read().or_else(Fail::from)
     }
 
     /// Write access to shared
-    pub fn threads_mut(&self) -> Result<RwLockWriteGuard<Vec<JoinHandle<()>>>> {
+    pub fn threads_mut(&self) -> Result<RwLockWriteGuard<'_, Vec<JoinHandle<()>>>> {
         self.threads.write().or_else(Fail::from)
     }
 
