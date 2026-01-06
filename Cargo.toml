@@ -10,7 +10,7 @@ readme = "README.md"
 documentation = "https://docs.rs/kern"
 
 [dependencies]
-rustls = { version = "0.23.35", optional = true }
+rustls = { version = "0.23.36", optional = true }
 rustls-pemfile = { version = "2.2.0", optional = true }
 rustls-pki-types = { version = "1.13.2", optional = true, features = ["alloc"] }
 webpki-roots = { version = "1.0.5", optional = true }
